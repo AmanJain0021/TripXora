@@ -12,7 +12,8 @@ const TripForm = ({ prefilledData }) => {
     budget: '',
     travelMode: 'car',
     interests: [],
-    ageGroup: 'all-ages'
+    ageGroup: 'all-ages',
+    hotelType: 'no_preference'
   });
   
   const { createTrip, loading, error } = useTrip();
@@ -30,7 +31,8 @@ const TripForm = ({ prefilledData }) => {
         budget: prefilledData.budget || prev.budget,
         travelMode: prefilledData.travelMode || prev.travelMode,
         interests: prefilledData.interests || prev.interests,
-        ageGroup: prefilledData.ageGroup || prev.ageGroup
+        ageGroup: prefilledData.ageGroup || prev.ageGroup,
+        hotelType: prefilledData.hotelType || prefilledData.preferences?.hotelType || prev.hotelType
       }));
     }
   }, [prefilledData]);
@@ -59,7 +61,8 @@ const TripForm = ({ prefilledData }) => {
         budget: Number(formData.budget),
         preferences: {
           interests: formData.interests,
-          ageGroup: formData.ageGroup
+          ageGroup: formData.ageGroup,
+          hotelType: formData.hotelType
         }
       };
       
@@ -184,6 +187,26 @@ const TripForm = ({ prefilledData }) => {
           <option value="teens">Teens (13-17 yrs)</option>
           <option value="adults">Adults (18-59 yrs)</option>
           <option value="seniors">Seniors (60+ yrs)</option>
+        </select>
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Type / Accommodation</label>
+        <select
+          name="hotelType"
+          value={formData.hotelType}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+        >
+          <option value="5_star">5 Star Hotel</option>
+          <option value="4_star">4 Star Hotel</option>
+          <option value="3_star">3 Star Hotel</option>
+          <option value="2_star">2 Star Hotel</option>
+          <option value="budget">Budget Hotel</option>
+          <option value="dharamshala">Dharamshala</option>
+          <option value="hostel">Hostel</option>
+          <option value="homestay">Homestay</option>
+          <option value="no_preference">No Preference</option>
         </select>
       </div>
 

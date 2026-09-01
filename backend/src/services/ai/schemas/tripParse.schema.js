@@ -45,6 +45,10 @@ const tripParseSchema = {
     ageGroup: {
       type: Type.STRING,
       description: "The targeted age group for the trip. Must be one of: 'kids', 'teens', 'adults', 'seniors', 'all-ages'. Default to 'all-ages'."
+    },
+    hotelType: {
+      type: Type.STRING,
+      description: "The preferred hotel or accommodation type. Must be one of: '5_star', '4_star', '3_star', '2_star', 'budget', 'dharamshala', 'hostel', 'homestay', 'no_preference'. Default to 'no_preference'."
     }
   },
   required: ["origin", "destination", "travelers", "travelMode"]
