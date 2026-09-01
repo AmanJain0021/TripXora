@@ -28,18 +28,18 @@
 
 ---
 
-## ⚙️ Implemented Modules & Features
-
-| Module / Feature | File Locations | Description & Technical Details |
+## ⚙️ Implemented Modul| Module / Feature | File Locations | Description & Technical Details |
 | :--- | :--- | :--- |
 | **Auth System** | `backend/src/modules/auth/`<br>`frontend/src/features/auth/` | User registration, login, JWT token generation & verification, password hashing with bcrypt, protected route guards. |
-| **Glassmorphism Auth UI** | [Register.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Register.jsx)<br>[RegisterForm.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/auth/RegisterForm.jsx)<br>[Login.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Login.jsx)<br>[LoginForm.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/auth/LoginForm.jsx) | Full viewport (`100vh`) travel background image (`signup-bg.jpg`), glassmorphism card container (`rgba(255,255,255,0.70)` with `backdrop-filter: blur(10px)`), high-contrast inputs & buttons. |
+| **Glassmorphism Auth UI** | [Register.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Register.jsx)<br>[RegisterForm.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/auth/RegisterForm.jsx)<br>[Login.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Login.jsx)<br>[LoginForm.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/auth/LoginForm.jsx) | Full viewport (`100vh`) travel background image (`signup-bg.jpeg`), glassmorphism card container (`rgba(255,255,255,0.70)` with `backdrop-filter: blur(10px)`), high-contrast inputs & buttons. |
 | **Trip Details Form & Hotel Type** | [TripForm.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/trip-builder/TripForm.jsx) | Trip creation form supporting origin, destination, dates, travelers, budget, travel mode, age group, interests, and **Hotel Type / Accommodation** dropdown (`5_star`, `4_star`, `3_star`, `2_star`, `budget`, `dharamshala`, `hostel`, `homestay`, `no_preference`). |
 | **Trip Model & Schema** | [trip.model.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/trip/trip.model.js) | Mongoose schema supporting user reference, status, parameters, stops, selected places, itinerary days/items, budget breakdown, revision history, and `preferences.hotelType`. |
 | **AI Natural Language Parser** | [ai.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/ai/ai.controller.js) (`parseTripInput`) | Parses unstructured raw text prompts into structured JSON fields (origin, destination, dates, travelers, budget, travel mode, interests, age group, hotel type) using [tripParse.schema.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/services/ai/schemas/tripParse.schema.js). |
 | **AI Itinerary Generator** | [ai.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/ai/ai.controller.js) (`generateItinerary`) | Generates structured day-by-day itineraries considering total budget, travel pace, age group, and hotel accommodation preference. Enriches itinerary items with Google Places photo URLs and lat/lng coordinates. |
 | **Dynamic AI Replanner** | [ai.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/ai/ai.controller.js) (`replanItinerary`) | Real-time itinerary adjustment engine that processes natural language user prompts (e.g., *"Make day 2 cheaper"* or *"Add Taj Mahal"*), adjusts time gaps, and appends to `trip.revisionHistory`. |
 | **Smart AI Packing List** | [ai.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/ai/ai.controller.js) (`generatePackingList`) | Generates destination- and weather-aware categorized packing recommendations adjusted for accommodation type and trip length. |
+| **Train Ticket Search** | [transit.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/transit/transit.controller.js)<br>[TrainSearch.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/transit/TrainSearch.jsx) | Train search feature with mock & live schedule parsing, class options (1A, 2A, 3A, SL), and pricing breakdown. |
+| **Flight Ticket Search & AviationStack API** | [transit.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/transit/transit.controller.js)<br>[transit.routes.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/transit/transit.routes.js)<br>[FlightSearch.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/transit/FlightSearch.jsx)<br>[Dashboard.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Dashboard.jsx) | Flight search module with live AviationStack API (`FLIGHT_API_KEY`), city-to-IATA mapper, airline logos/badges (`6E`, `AI`, `UK`, `QP`), route timelines, cabin fares, direct MakeMyTrip "Book Now" buttons, Trip Tools tab, and left navigation sidebar item with drawer. |
 | **Budget Engine** | [budget.service.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/budget/budget.service.js) | Recalculates estimated costs based on travel mode distance math, stay nights, food, and activities. |
 | **Interactive Map & Discovery** | [TripMap.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/map/TripMap.jsx)<br>[Dashboard.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Dashboard.jsx) | Interactive Google Map rendering origin, destination, route polylines, place search, and location previews. |
 
@@ -63,6 +63,7 @@ TripXora/
 │       │   ├── budget/              # Budget Service
 │       │   ├── place/               # Google Places API Controllers & Routes
 │       │   ├── route/               # Directions API Controller & Routes
+│       │   ├── transit/             # Train & Flight Search Controllers (`searchTrains`, `searchFlights`) & Routes
 │       │   └── trip/                # Trip Mongoose Model, Controller & Routes
 │       └── services/ai/             # Gemini Client & Schemas (itinerary.schema.js, tripParse.schema.js)
 └── frontend/
@@ -80,6 +81,7 @@ TripXora/
         │   ├── budget/              # BudgetPanel.jsx
         │   ├── extras/              # ExtrasPanel.jsx (Packing List UI)
         │   ├── map/                 # TripMap.jsx
+        │   ├── transit/             # TrainSearch.jsx & FlightSearch.jsx (AviationStack API & MakeMyTrip Booking)
         │   └── trip-builder/        # TripForm.jsx, ItineraryView.jsx, PlaceSearch.jsx, PlacePreview.jsx
         └── pages/                   # Register.jsx, Login.jsx, Dashboard.jsx, CreateTrip.jsx, TripHistory.jsx
 ```
@@ -94,6 +96,8 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GEMINI_API_KEY=your_gemini_api_key
+TRAIN_API_KEY=rg_24020a31e80d4c5b99ee753a2a904840
+FLIGHT_API_KEY=3a90dcd325d16a186c18a933ec317de7
 ```
 
 ### Frontend (`frontend/.env`):
@@ -117,4 +121,22 @@ VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
   - Configured premium transparent glassmorphism card (`rgba(255, 255, 255, 0.40)` with `backdrop-filter: blur(12px)` and semi-transparent white inputs `bg-white/60`).
   - Fixed Vite import resolution path to point to `signup-bg.jpeg`.
   - Enhanced contrast and readability for inputs, labels, buttons, and links.
-- **2026-09-01**: Updated `brain.md` with complete architectural documentation, feature matrix, file map, and memory log.
+- **2026-09-01**: Added **Flight Ticket Search System**:
+  - Implemented `searchFlights` controller in [transit.controller.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/transit/transit.controller.js) with live **AviationStack API** integration (`FLIGHT_API_KEY=3a90dcd325d16a186c18a933ec317de7`) and city-to-IATA code mapper (Delhi -> DEL, Mumbai -> BOM, Indore -> IDR, etc.).
+  - Added route `GET /api/transit/flights` in [transit.routes.js](file:///c:/Users/akash/Desktop/TripXora/backend/src/modules/transit/transit.routes.js).
+  - Created [FlightSearch.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/transit/FlightSearch.jsx) with airline badges (IndiGo, Air India, Vistara, Akasa Air), duration timelines, fare tiers, and MakeMyTrip "Book Now" buttons (`https://www.makemytrip.com/flights/`).
+  - Added **Flights** tab in "Trip Tools" panel and added **Flight Tickets** item with `LIVE` badge to the left navigation sidebar & slide-over drawer in [Dashboard.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Dashboard.jsx).
+- **2026-09-01**: Enhanced **Train Ticket Search System**:
+  - Added **Book Now** buttons to all train cards in [TrainSearch.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/features/transit/TrainSearch.jsx) linking directly to MakeMyTrip Railways / IRCTC (`https://www.makemytrip.com/railways/`).
+  - Added **Train Tickets** item with `LIVE` badge to the left navigation sidebar in [Dashboard.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Dashboard.jsx).
+  - Added slide-over **Train Finder** drawer for main dashboard view and top navbar **Trains** shortcut button.
+- **2026-09-01**: Resolved **White Screen / Render Crash** issue:
+  - Created [ErrorBoundary.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/components/ErrorBoundary.jsx) to catch uncaught JS errors gracefully and provide a dark-theme recovery screen.
+  - Wrapped root app in [App.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/App.jsx) with `<ErrorBoundary>`.
+  - Updated [ProtectedRoute.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/components/ProtectedRoute.jsx) loading screen from light `bg-gray-50` to dark `#0B1120` to prevent white screen flashes on initial auth check & refresh.
+  - Made `trips` sorting array spread (`[...(trips || [])]`) and `currentTrip` property accesses (`currentTrip?.destination?.name`) 100% null-safe in [Dashboard.jsx](file:///c:/Users/akash/Desktop/TripXora/frontend/src/pages/Dashboard.jsx).
+- **2026-09-01**: Updated `brain.md` with complete memory log, feature updates, environment key reference, and session history.
+
+
+
+

@@ -10,31 +10,34 @@ import CreateTrip from './pages/CreateTrip';
 import TripHistory from './pages/TripHistory';
 import Profile from './pages/Profile';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   return (
-    <AuthProvider>
-      <TripProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/create" element={<CreateTrip />} />
-              <Route path="/history" element={<TripHistory />} />
-              <Route path="/profile" element={<Profile />} />
-              {/* Add more protected routes here */}
-            </Route>
+    <ErrorBoundary>
+      <AuthProvider>
+        <TripProvider>
+          <Router>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/create" element={<CreateTrip />} />
+                <Route path="/history" element={<TripHistory />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
 
-            {/* Default Route */}
-            <Route path="*" element={<Navigate to="/history" replace />} />
-          </Routes>
-        </Router>
-      </TripProvider>
-    </AuthProvider>
+              {/* Default Route */}
+              <Route path="*" element={<Navigate to="/history" replace />} />
+            </Routes>
+          </Router>
+        </TripProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

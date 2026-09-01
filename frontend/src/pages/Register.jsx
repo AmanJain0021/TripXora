@@ -1,6 +1,6 @@
 import React from 'react';
 import RegisterForm from '../features/auth/RegisterForm';
-import signupBg from '../assets/signup-bg.jpeg';
+import signupBg from '../assets/signup-bg.png';
 
 const Register = () => {
   return (

@@ -9,6 +9,7 @@ import ItineraryView from '../features/trip-builder/ItineraryView';
 import BudgetPanel from '../features/budget/BudgetPanel';
 import ExtrasPanel from '../features/extras/ExtrasPanel';
 import TrainSearch from '../features/transit/TrainSearch';
+import FlightSearch from '../features/transit/FlightSearch';
 import { calculateRoute } from '../api/routes.api';
 
 const Dashboard = () => {
@@ -22,6 +23,8 @@ const Dashboard = () => {
   const [showToolsPanel, setShowToolsPanel] = useState(false);
   const [activeTab, setActiveTab] = useState('discover');
   const [isCostExpanded, setIsCostExpanded] = useState(false);
+  const [showFlightDrawer, setShowFlightDrawer] = useState(false);
+  const [showTrainDrawer, setShowTrainDrawer] = useState(false);
 
   useEffect(() => {
     if (tripId) {
@@ -98,7 +101,7 @@ const Dashboard = () => {
   const estCost = currentTrip?.budget?.totalEstimated || 0;
 
   if (!tripId) {
-    const sortedTrips = [...trips].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const sortedTrips = [...(trips || [])].sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
     
     return (
       <div className="min-h-screen bg-[#0B1120] flex font-sans text-gray-200 overflow-hidden">
@@ -129,6 +132,27 @@ const Dashboard = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                 Plan New Trip
               </Link>
+              <div 
+                onClick={() => setShowFlightDrawer(true)}
+                className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer group"
+              >
+                <svg className="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Flight Tickets</span>
+                <span className="ml-auto bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Live</span>
+              </div>
+              <div 
+                onClick={() => setShowTrainDrawer(true)}
+                className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer group"
+              >
+                <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                </svg>
+                <span>Train Tickets</span>
+                <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Live</span>
+              </div>
               <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                 Explore Destinations
@@ -246,7 +270,7 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                   {sortedTrips.map((trip) => {
-                    const destName = trip.destination.name.split(',')[0];
+                    const destName = trip.destination?.name ? trip.destination.name.split(',')[0] : 'Destination';
                     const imageUrl = `https://picsum.photos/seed/${trip._id}/800/600`;
                     
                     return (
@@ -335,10 +359,51 @@ const Dashboard = () => {
                       </div>
                     );
                   })}
-                </div>
+                 </div>
               )}
            </div>
         </main>
+
+        {/* Slide Out Flight Search Panel for Main Dashboard */}
+        {showFlightDrawer && (
+           <div className="fixed inset-y-0 right-0 w-96 bg-[#0f172a] border-l border-gray-700 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300">
+              <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#161E31]">
+                 <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                   <svg className="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                   </svg>
+                   Flight Finder
+                 </h3>
+                 <button onClick={() => setShowFlightDrawer(false)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-800">
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                 </button>
+              </div>
+              <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
+                 <FlightSearch currentTrip={null} />
+              </div>
+           </div>
+        )}
+
+        {/* Slide Out Train Search Panel for Main Dashboard */}
+        {showTrainDrawer && (
+           <div className="fixed inset-y-0 right-0 w-96 bg-[#0f172a] border-l border-gray-700 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300">
+              <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#161E31]">
+                 <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                   <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                   </svg>
+                   Train Finder
+                 </h3>
+                 <button onClick={() => setShowTrainDrawer(false)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-800">
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                 </button>
+              </div>
+              <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
+                 <TrainSearch currentTrip={null} />
+              </div>
+           </div>
+        )}
       </div>
     );
   }
@@ -395,6 +460,27 @@ const Dashboard = () => {
               </div>
 
               <button 
+                onClick={() => { setShowToolsPanel(true); setActiveTab('flights'); }}
+                className="flex items-center gap-2 px-3.5 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg text-sm font-semibold transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Flights
+              </button>
+
+              <button 
+                onClick={() => { setShowToolsPanel(true); setActiveTab('trains'); }}
+                className="flex items-center gap-2 px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-semibold transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                </svg>
+                Trains
+              </button>
+
+              <button 
                 onClick={() => setShowToolsPanel(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-[#1E293B] hover:bg-[#334155] rounded-lg text-sm font-semibold text-white transition-colors border border-gray-700"
               >
@@ -433,10 +519,10 @@ const Dashboard = () => {
               
               <div className="mb-2">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  Your Trip to {currentTrip.destination.name} <span className="text-yellow-400 text-xl">✨</span>
+                  Your Trip to {currentTrip?.destination?.name || 'Destination'} <span className="text-yellow-400 text-xl">✨</span>
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">
-                  <span className="text-emerald-400 font-semibold">{currentTrip.origin.name}</span> → <span className="text-blue-400 font-semibold">{currentTrip.destination.name}</span> ({currentTrip.itinerary?.length || 0} Days)
+                  <span className="text-emerald-400 font-semibold">{currentTrip?.origin?.name || 'Origin'}</span> → <span className="text-blue-400 font-semibold">{currentTrip?.destination?.name || 'Destination'}</span> ({currentTrip?.itinerary?.length || 0} Days)
                 </p>
               </div>
 
@@ -547,19 +633,25 @@ const Dashboard = () => {
                   </div>
                   <div className="flex border-b border-gray-800 shrink-0 bg-[#161E31]">
                      <button 
-                       className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'discover' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'discover' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
                        onClick={() => setActiveTab('discover')}
                      >
                        Discover
                      </button>
                      <button 
-                       className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'trains' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'trains' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
                        onClick={() => setActiveTab('trains')}
                      >
                        Trains
                      </button>
                      <button 
-                       className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'budget' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'flights' ? 'text-sky-400 border-b-2 border-sky-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       onClick={() => setActiveTab('flights')}
+                     >
+                       Flights
+                     </button>
+                     <button 
+                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'budget' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
                        onClick={() => setActiveTab('budget')}
                      >
                        Budget
@@ -568,7 +660,7 @@ const Dashboard = () => {
                   <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
                      {activeTab === 'discover' && (
                        <PlaceSearch 
-                         destination={currentTrip.destination.name} 
+                         destination={currentTrip?.destination?.name || ''} 
                          onAddPlace={handleAddPlace} 
                          onPlaceClick={setPreviewPlace}
                          darkTheme={true}
@@ -576,6 +668,9 @@ const Dashboard = () => {
                      )}
                      {activeTab === 'trains' && (
                        <TrainSearch currentTrip={currentTrip} />
+                     )}
+                     {activeTab === 'flights' && (
+                       <FlightSearch currentTrip={currentTrip} />
                      )}
                      {activeTab === 'budget' && (
                        <BudgetPanel trip={currentTrip} />
