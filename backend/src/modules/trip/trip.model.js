@@ -117,6 +117,11 @@ const tripSchema = new mongoose.Schema({
   },
   preferences: {
     interests: [String],
+    ageGroup: {
+      type: String,
+      enum: ['kids', 'teens', 'adults', 'seniors', 'all-ages'],
+      default: 'all-ages'
+    },
     travelPace: {
       type: String,
       enum: ['relaxed', 'moderate', 'packed'],

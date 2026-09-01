@@ -41,6 +41,10 @@ const tripParseSchema = {
         type: Type.STRING
       },
       description: "A list of interests or themes the user mentioned, e.g. ['historical', 'food', 'nature']"
+    },
+    ageGroup: {
+      type: Type.STRING,
+      description: "The targeted age group for the trip. Must be one of: 'kids', 'teens', 'adults', 'seniors', 'all-ages'. Default to 'all-ages'."
     }
   },
   required: ["origin", "destination", "travelers", "travelMode"]

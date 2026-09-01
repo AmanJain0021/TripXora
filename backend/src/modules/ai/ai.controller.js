@@ -1,5 +1,6 @@
 const asyncHandler = require('../../utils/asyncHandler');
 const { generateStructuredOutput } = require('../../services/ai/geminiProvider');
+const { searchPlaces } = require('../../integrations/googleMaps/places');
 const tripParseSchema = require('../../services/ai/schemas/tripParse.schema');
 const itinerarySchema = require('../../services/ai/schemas/itinerary.schema');
 const Trip = require('../trip/trip.model');
@@ -54,6 +55,7 @@ Trip Constraints:
 - Total Budget: ${trip.budget?.totalBudget || 'Unspecified'}
 - Pace: ${trip.preferences?.travelPace || 'moderate'}
 - Interests: ${trip.preferences?.interests?.join(', ') || 'General sightseeing'}
+- Age Group: ${trip.preferences?.ageGroup || 'all-ages'}
 
 User Selected Places that MUST be included if possible:
 ${JSON.stringify(trip.selectedPlaces.map(p => ({ name: p.name, category: p.category, rating: p.rating, photo_url: p.photo_url })), null, 2)}
@@ -68,6 +70,31 @@ Rules:
   const aiResult = await generateStructuredOutput(systemInstruction, itinerarySchema, 'gemini-2.5-flash');
 
   if (aiResult.itinerary) {
+    // Enrich itinerary with photos from Google Places
+    const enrichPromises = [];
+    for (const day of aiResult.itinerary) {
+      for (const item of day.items) {
+        if (!item.photo_url && ['attraction', 'meal', 'hotel'].includes(item.type)) {
+          const query = `${item.name} in ${trip.destination.name}`;
+          const promise = searchPlaces(query)
+            .then(places => {
+              if (places && places.length > 0) {
+                if (places[0].photo_url) item.photo_url = places[0].photo_url;
+                if (places[0].geometry?.location) {
+                  item.coordinates = {
+                    lat: places[0].geometry.location.lat,
+                    lng: places[0].geometry.location.lng
+                  };
+                }
+              }
+            })
+            .catch(err => console.error(`Failed to fetch details for ${item.name}`));
+          enrichPromises.push(promise);
+        }
+      }
+    }
+    await Promise.all(enrichPromises);
+
     trip.itinerary = aiResult.itinerary;
     trip.status = 'planned';
     if (aiResult.optimizationNotes) {
@@ -140,6 +167,31 @@ Rules:
       createdAt: new Date()
     });
 
+    // Enrich itinerary with photos from Google Places
+    const enrichPromises = [];
+    for (const day of aiResult.itinerary) {
+      for (const item of day.items) {
+        if (!item.photo_url && ['attraction', 'meal', 'hotel'].includes(item.type)) {
+          const query = `${item.name} in ${trip.destination.name}`;
+          const promise = searchPlaces(query)
+            .then(places => {
+              if (places && places.length > 0) {
+                if (places[0].photo_url) item.photo_url = places[0].photo_url;
+                if (places[0].geometry?.location) {
+                  item.coordinates = {
+                    lat: places[0].geometry.location.lat,
+                    lng: places[0].geometry.location.lng
+                  };
+                }
+              }
+            })
+            .catch(err => console.error(`Failed to fetch details for ${item.name}`));
+          enrichPromises.push(promise);
+        }
+      }
+    }
+    await Promise.all(enrichPromises);
+
     trip.itinerary = aiResult.itinerary;
     
     if (aiResult.optimizationNotes) {
@@ -203,6 +255,7 @@ Trip Constraints:
 - End Date: ${trip.endDate}
 - Travelers: ${trip.travelers}
 - Interests: ${trip.preferences?.interests?.join(', ') || 'General'}
+- Age Group: ${trip.preferences?.ageGroup || 'all-ages'}
 Consider the likely weather for the destination during these dates.`;
 
   const aiResult = await generateStructuredOutput(systemInstruction, packingSchema, 'gemini-2.5-flash');

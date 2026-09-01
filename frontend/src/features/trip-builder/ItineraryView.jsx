@@ -2,7 +2,19 @@ import React, { useState } from 'react';
 import { generateItinerary, replanItinerary } from '../../api/ai.api';
 import { useTrip } from '../../hooks/useTrip';
 
-const ItineraryView = ({ trip }) => {
+const getDistance = (coord1, coord2) => {
+  if (!coord1 || !coord2 || !coord1.lat || !coord1.lng || !coord2.lat || !coord2.lng) return null;
+  const R = 6371; // km
+  const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+  const dLon = (coord2.lng - coord1.lng) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return (R * c).toFixed(1);
+};
+
+const ItineraryView = ({ trip, onPlaceClick, darkTheme = false }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [instruction, setInstruction] = useState('');
@@ -36,140 +48,185 @@ const ItineraryView = ({ trip }) => {
     }
   };
 
-  const handleRemoveItem = (itemName, dayIndex) => {
-    const prompt = `Remove "${itemName}" from Day ${dayIndex} and fill the gap logically without going over budget.`;
-    handleReplan(prompt);
+  const handlePreview = (item) => {
+    if (onPlaceClick) {
+      onPlaceClick({
+        name: item.name,
+        category: item.type,
+        photo_url: item.photo_url,
+        notes: item.notes,
+        cost: item.cost
+      });
+    }
+  };
+
+  const generateDayTitle = (items) => {
+    const locations = items
+      .filter(i => i.type === 'attraction' || i.name.toLowerCase().includes('drive') || i.name.toLowerCase().includes('flight'))
+      .map(i => {
+        let name = i.name;
+        if (name.toLowerCase().includes('drive to ')) name = name.replace(/drive to /i, '');
+        if (name.toLowerCase().includes('travel to ')) name = name.replace(/travel to /i, '');
+        return name;
+      })
+      .slice(0, 3);
+      
+    if (locations.length > 0) return locations.join(' → ');
+    return 'Local Sightseeing & Leisure';
   };
 
   if (isGenerating) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center h-full flex flex-col items-center justify-center flex-1">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">AI is adjusting your trip...</h3>
-        <p className="text-gray-500 text-sm">Analyzing places, optimizing routes, and checking budgets.</p>
+      <div className="p-8 text-center h-full flex flex-col items-center justify-center flex-1">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-400 text-sm">TripXora is optimizing your route...</p>
       </div>
     );
   }
 
   if (!trip.itinerary || trip.itinerary.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center flex-1 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">No Itinerary Yet</h3>
+      <div className="text-center flex-1 flex flex-col items-center justify-center">
+        <h3 className="text-lg font-semibold text-white mb-2">No Itinerary Yet</h3>
         <p className="text-gray-500 text-sm mb-6 max-w-xs">
-          Select some places you want to visit, then let our AI generate an optimized day-by-day plan.
+          Let TripXora generate an optimized day-by-day plan.
         </p>
         <button
           onClick={handleGenerate}
-          className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors shadow-sm w-full"
+          className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-6 py-2 rounded-lg font-medium hover:bg-blue-600/30 transition-colors shadow-sm w-full"
         >
-          ✨ Generate AI Itinerary
+          ✨ Generate Itinerary
         </button>
         {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
       </div>
     );
   }
 
+  const getDayColor = (index) => {
+    const colors = [
+      'from-emerald-500 to-teal-400',
+      'from-blue-500 to-indigo-500',
+      'from-purple-500 to-fuchsia-500',
+      'from-orange-500 to-red-500',
+    ];
+    return colors[(index - 1) % colors.length];
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
-        <h3 className="text-xl font-bold text-gray-900">Your Itinerary</h3>
-        <button
-          onClick={handleGenerate}
-          className="text-primary text-sm font-medium hover:underline flex items-center"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          Re-generate
-        </button>
+    <div className="flex flex-col h-full text-gray-200">
+      <div className="flex-1 overflow-y-auto" style={{scrollbarWidth: 'none'}}>
+        <div className="relative border-l border-gray-700 ml-4 pb-4 mt-4 space-y-8">
+          {trip.itinerary.map((day, dIdx) => (
+            <div key={day.dayIndex} className="relative">
+              {/* Day Badge */}
+              <div className="absolute -left-[1.65rem] top-0 flex items-center justify-center bg-[#161E31] py-1">
+                <div className={`bg-gradient-to-r ${getDayColor(day.dayIndex)} text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border-2 border-[#161E31]`}>
+                  Day {day.dayIndex}
+                </div>
+              </div>
+              
+              <div className="ml-10">
+                <h4 className="font-bold text-white mb-3 text-sm leading-tight pr-2">
+                  {generateDayTitle(day.items)}
+                </h4>
+                
+                <div className="mt-6 mb-8">
+                  {day.items.map((item, idx) => {
+                    // Fallback mock time since not all AI outputs have a strict time field
+                    const getTimeForIndex = (i) => {
+                      const times = ['08:00 AM', '09:30 AM', '11:00 AM', '01:00 PM', '02:30 PM', '04:00 PM', '06:30 PM', '08:00 PM'];
+                      return times[i % times.length];
+                    };
+
+                    const nextItem = day.items[idx + 1];
+                    const distance = nextItem ? getDistance(item.coordinates, nextItem.coordinates) : null;
+
+                    return (
+                      <div key={idx} className="relative w-full">
+                        <div 
+                          className="flex w-full cursor-pointer group"
+                          onClick={(e) => { e.stopPropagation(); handlePreview(item); }}
+                        >
+                          {/* Time column */}
+                          <div className="w-16 text-[10px] text-gray-400 font-medium text-right pr-3 pt-1 shrink-0">
+                            {item.time || item.startTime || getTimeForIndex(idx)}
+                          </div>
+                          
+                          {/* Timeline line */}
+                          <div className="relative border-l border-gray-700 pl-4 w-full pb-6">
+                            {/* dot */}
+                            <div className="absolute -left-[5px] top-1.5 w-2 h-2 bg-gray-500 rounded-full group-hover:bg-blue-400 transition-colors"></div>
+                            
+                            {/* Card */}
+                            <div className="bg-[#1E293B] rounded-xl p-3 border border-gray-700/80 shadow-sm hover:border-gray-500 hover:shadow-md transition-all">
+                               <div className="flex gap-3">
+                                  {item.photo_url && (
+                                     <img src={item.photo_url} className="w-12 h-12 rounded-lg object-cover shrink-0 border border-gray-700" alt={item.name} />
+                                  )}
+                                  <div className="flex-1">
+                                     <h5 className="font-bold text-white text-[13px] leading-snug group-hover:text-blue-400 transition-colors">{item.name}</h5>
+                                     <div className="flex items-center flex-wrap gap-2 mt-2">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded bg-[#0f172a]">{item.type}</span>
+                                        {item.duration && (
+                                          <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            {item.duration} {typeof item.duration === 'number' ? 'mins' : ''}
+                                          </span>
+                                        )}
+                                        {item.cost > 0 && <span className="text-[10px] text-emerald-400 font-bold ml-auto bg-emerald-500/10 px-1.5 py-0.5 rounded">₹{item.cost}</span>}
+                                     </div>
+                                  </div>
+                               </div>
+                               {item.notes && (
+                                  <div className="mt-3 p-2 bg-[#0f172a] rounded-lg border border-gray-800 text-[11px] text-gray-400 flex items-start gap-2">
+                                     <span className="text-yellow-500 mt-0.5 shrink-0 text-sm">💡</span>
+                                     <span className="leading-relaxed">{item.notes}</span>
+                                  </div>
+                               )}
+                            </div>
+                            
+                            {/* Distance Badge */}
+                            {distance && distance > 0 && (
+                               <div className="absolute -bottom-3 left-[-22px] flex items-center bg-[#161E31] px-2 py-0.5 rounded-full border border-gray-700/80 z-10">
+                                  <svg className="w-3 h-3 text-blue-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                                  <span className="text-[9px] font-medium text-gray-400">{distance} km</span>
+                               </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="p-4 bg-blue-50/50 border-b border-gray-100 shrink-0">
+      <div className="mt-4 pt-4 border-t border-gray-800">
         <div className="flex gap-2">
           <input
             type="text"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
-            placeholder="e.g. Add 2 hours of rest on Day 1"
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            placeholder="Adjust itinerary (e.g., Make it cheaper)"
+            className="flex-1 px-3 py-2 text-sm bg-[#0f172a] border border-gray-700 text-white rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600"
           />
           <button
             onClick={() => handleReplan(instruction)}
-            disabled={!instruction.trim()}
-            className="bg-primary text-white px-4 py-2 text-sm rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 transition-colors shrink-0"
+            disabled={!instruction.trim() || isGenerating}
+            className="bg-[#1E293B] text-blue-400 border border-gray-700 px-3 py-2 text-sm rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors shrink-0"
           >
-            Adjust ✨
+            Adjust
           </button>
         </div>
-      </div>
-
-      <div className="p-6 overflow-y-auto flex-1 space-y-8">
-        {trip.itinerary.map((day) => (
-          <div key={day.dayIndex} className="relative">
-            <h4 className="font-bold text-gray-900 mb-4 sticky top-0 bg-white/95 backdrop-blur py-2 z-10 border-b border-gray-100">
-              Day {day.dayIndex} <span className="text-gray-400 font-normal ml-2">{day.date}</span>
-            </h4>
-            
-            <div className="space-y-4">
-              {day.items.map((item, idx) => (
-                <div key={idx} className="flex gap-4 group">
-                  <div className="flex flex-col items-center">
-                    <div className="text-xs font-semibold text-gray-500 w-16 text-right pt-1 group-hover:text-primary transition-colors">
-                      {item.time}
-                    </div>
-                    {idx !== day.items.length - 1 && (
-                      <div className="w-px h-full bg-gray-200 mt-2"></div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 pb-4">
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 group-hover:border-blue-100 group-hover:bg-blue-50/50 transition-colors relative">
-                      <button 
-                        onClick={() => handleRemoveItem(item.name, day.dayIndex)}
-                        className="absolute top-3 right-3 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                        title="Remove activity"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                      
-                      <div className="flex justify-between items-start mb-2 pr-8">
-                        <div className="flex gap-3 items-center">
-                          {item.photo_url && (
-                            <img src={item.photo_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                          )}
-                          <h5 className="font-semibold text-gray-900 text-sm">{item.name}</h5>
-                        </div>
-                        {item.cost > 0 && (
-                          <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded shrink-0">
-                            ₹{item.cost}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
-                        <span className="capitalize px-2 py-0.5 bg-white rounded border border-gray-200">
-                          {item.type}
-                        </span>
-                        <span>⏱ {Math.round(item.duration / 60)}h {item.duration % 60 > 0 ? `${item.duration % 60}m` : ''}</span>
-                      </div>
-                      {item.notes && (
-                        <p className="text-sm text-gray-600 bg-white/50 p-2 rounded-lg border border-gray-100 pr-8">
-                          💡 {item.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        <button
+          onClick={handleGenerate}
+          className="text-gray-500 text-xs font-medium hover:text-white transition-colors mt-2 text-center w-full"
+        >
+          Reset / Re-generate ↻
+        </button>
       </div>
     </div>
   );

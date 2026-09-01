@@ -11,7 +11,8 @@ const TripForm = ({ prefilledData }) => {
     travelers: 1,
     budget: '',
     travelMode: 'car',
-    interests: []
+    interests: [],
+    ageGroup: 'all-ages'
   });
   
   const { createTrip, loading, error } = useTrip();
@@ -28,7 +29,8 @@ const TripForm = ({ prefilledData }) => {
         travelers: prefilledData.travelers || prev.travelers,
         budget: prefilledData.budget || prev.budget,
         travelMode: prefilledData.travelMode || prev.travelMode,
-        interests: prefilledData.interests || prev.interests
+        interests: prefilledData.interests || prev.interests,
+        ageGroup: prefilledData.ageGroup || prev.ageGroup
       }));
     }
   }, [prefilledData]);
@@ -56,7 +58,8 @@ const TripForm = ({ prefilledData }) => {
         travelMode: formData.travelMode,
         budget: Number(formData.budget),
         preferences: {
-          interests: formData.interests
+          interests: formData.interests,
+          ageGroup: formData.ageGroup
         }
       };
       
@@ -166,6 +169,22 @@ const TripForm = ({ prefilledData }) => {
             <option value="flight">Flight</option>
           </select>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
+        <select
+          name="ageGroup"
+          value={formData.ageGroup}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+        >
+          <option value="all-ages">All Ages (Mixed)</option>
+          <option value="kids">Kids (0-12 yrs)</option>
+          <option value="teens">Teens (13-17 yrs)</option>
+          <option value="adults">Adults (18-59 yrs)</option>
+          <option value="seniors">Seniors (60+ yrs)</option>
+        </select>
       </div>
 
       <div className="mb-8">

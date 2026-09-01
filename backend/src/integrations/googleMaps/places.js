@@ -42,10 +42,12 @@ const searchPlaces = async (query, type) => {
     if (response.data.status === 'OK' || response.data.status === 'ZERO_RESULTS') {
       const results = response.data.results.map(place => {
         let photo_url = null;
+        let photos_urls = [];
         if (place.photos && place.photos.length > 0) {
-          photo_url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+          photos_urls = place.photos.map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`);
+          photo_url = photos_urls[0];
         }
-        return { ...place, photo_url };
+        return { ...place, photo_url, photos_urls };
       });
       return results;
     } else {
@@ -83,7 +85,11 @@ const getPlaceDetails = async (placeId) => {
     });
 
     if (response.data.status === 'OK') {
-      return response.data.result;
+      const result = response.data.result;
+      if (result.photos && result.photos.length > 0) {
+        result.photos_urls = result.photos.map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`);
+      }
+      return result;
     } else {
       throw new Error(`Google Places API error: ${response.data.status}`);
     }
