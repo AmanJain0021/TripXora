@@ -56,6 +56,7 @@ Trip Constraints:
 - Pace: ${trip.preferences?.travelPace || 'moderate'}
 - Interests: ${trip.preferences?.interests?.join(', ') || 'General sightseeing'}
 - Age Group: ${trip.preferences?.ageGroup || 'all-ages'}
+- Hotel / Accommodation Preference: ${trip.preferences?.hotelType || 'no_preference'}
 
 User Selected Places that MUST be included if possible:
 ${JSON.stringify(trip.selectedPlaces.map(p => ({ name: p.name, category: p.category, rating: p.rating, photo_url: p.photo_url })), null, 2)}
@@ -65,7 +66,8 @@ Rules:
 2. Group nearby places on the same day.
 3. Keep the budget constraint in mind. If a selected place pushes them over budget, mention it in the optimizationNotes.
 4. Fill in gaps with logical suggestions (e.g., if no restaurants were selected, suggest some for meals).
-5. Ensure there is time allocated for travel from origin to destination and back.`;
+5. Ensure there is time allocated for travel from origin to destination and back.
+6. Respect the user's Hotel / Accommodation Preference (e.g., if '5_star', prioritize 5-star hotel options; if 'dharamshala', prioritize Dharamshala; if 'hostel', prioritize hostels; if 'homestay', prioritize homestays; if 'no_preference', select accommodations matching budget).`;
 
   const aiResult = await generateStructuredOutput(systemInstruction, itinerarySchema, 'gemini-2.5-flash');
 
@@ -145,6 +147,7 @@ const replanItinerary = asyncHandler(async (req, res) => {
 Trip Constraints:
 - Total Budget: ${trip.budget?.totalBudget || 'Unspecified'}
 - Current Estimated Cost: ${trip.budget?.totalEstimated || 0}
+- Hotel / Accommodation Preference: ${trip.preferences?.hotelType || 'no_preference'}
 
 Current Itinerary Data (JSON):
 ${JSON.stringify(trip.itinerary, null, 2)}
@@ -256,6 +259,7 @@ Trip Constraints:
 - Travelers: ${trip.travelers}
 - Interests: ${trip.preferences?.interests?.join(', ') || 'General'}
 - Age Group: ${trip.preferences?.ageGroup || 'all-ages'}
+- Accommodation Type: ${trip.preferences?.hotelType || 'no_preference'}
 Consider the likely weather for the destination during these dates.`;
 
   const aiResult = await generateStructuredOutput(systemInstruction, packingSchema, 'gemini-2.5-flash');

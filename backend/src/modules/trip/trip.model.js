@@ -122,6 +122,11 @@ const tripSchema = new mongoose.Schema({
       enum: ['kids', 'teens', 'adults', 'seniors', 'all-ages'],
       default: 'all-ages'
     },
+    hotelType: {
+      type: String,
+      enum: ['5_star', '4_star', '3_star', '2_star', 'budget', 'dharamshala', 'hostel', 'homestay', 'no_preference'],
+      default: 'no_preference'
+    },
     travelPace: {
       type: String,
       enum: ['relaxed', 'moderate', 'packed'],

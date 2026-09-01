@@ -20,22 +20,29 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="w-full max-w-md mx-auto px-4">
+      <div 
+        className="rounded-3xl shadow-2xl p-8 border border-white/60 transition-all"
+        style={{
+          background: 'rgba(255, 255, 255, 0.40)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)'
+        }}
+      >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-500 mt-2">Start planning your perfect trip</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Create Account</h2>
+          <p className="text-gray-900 font-bold mt-1">Start planning your perfect trip</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-500 p-3 rounded-lg mb-6 text-sm">
+          <div className="bg-red-500/20 border border-red-500/40 text-red-900 font-bold p-3.5 rounded-xl mb-6 text-sm backdrop-blur-md">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-sm font-extrabold text-gray-900 mb-1.5">Full Name</label>
             <input
               type="text"
               value={name}
@@ -43,14 +50,14 @@ const RegisterForm = () => {
                 setName(e.target.value);
                 if (error) setError(null);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+              className="w-full px-4 py-2.5 bg-white/60 border border-white/80 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-purple-600 focus:bg-white text-gray-900 placeholder-gray-600 outline-none transition-all shadow-sm font-semibold"
               placeholder="John Doe"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-extrabold text-gray-900 mb-1.5">Email</label>
             <input
               type="email"
               value={email}
@@ -58,14 +65,14 @@ const RegisterForm = () => {
                 setEmail(e.target.value);
                 if (error) setError(null);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+              className="w-full px-4 py-2.5 bg-white/60 border border-white/80 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-purple-600 focus:bg-white text-gray-900 placeholder-gray-600 outline-none transition-all shadow-sm font-semibold"
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-extrabold text-gray-900 mb-1.5">Password</label>
             <input
               type="password"
               value={password}
@@ -73,7 +80,7 @@ const RegisterForm = () => {
                 setPassword(e.target.value);
                 if (error) setError(null);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+              className="w-full px-4 py-2.5 bg-white/60 border border-white/80 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-purple-600 focus:bg-white text-gray-900 placeholder-gray-600 outline-none transition-all shadow-sm font-semibold"
               placeholder="•••••••• (Min 6 characters)"
               required
               minLength={6}
@@ -82,15 +89,15 @@ const RegisterForm = () => {
 
           <button
             type="submit"
-            className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+            className="w-full bg-primary hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-purple-500/25 active:scale-[0.99] cursor-pointer"
           >
             Sign Up
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-gray-700 font-medium mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary font-semibold hover:underline">
+          <Link to="/login" className="text-primary font-bold hover:underline hover:text-purple-700 transition-colors">
             Log in
           </Link>
         </p>
