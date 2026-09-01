@@ -49,10 +49,16 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  // Validate input
+  if (!email || !password) {
+    res.status(400);
+    throw new Error('Please provide an email and password');
+  }
+
   // Check for user email
   const user = await User.findOne({ email }).select('+password');
 
-  if (user && (await user.matchPassword(password))) {
+  if (user && user.password && (await user.matchPassword(password))) {
     res.json({
       _id: user._id,
       name: user.name,
