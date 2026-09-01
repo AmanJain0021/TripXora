@@ -40,6 +40,7 @@ app.use('/api/trips', require('./modules/trip/trip.routes'));
 app.use('/api/ai', require('./modules/ai/ai.routes'));
 app.use('/api/routes', require('./modules/route/route.routes'));
 app.use('/api/places', require('./modules/place/place.routes'));
+app.use('/api/transit', require('./modules/transit/transit.routes'));
 
 // Error Handling Middleware
 app.use(errorHandler);

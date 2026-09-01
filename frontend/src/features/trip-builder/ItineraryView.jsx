@@ -183,6 +183,31 @@ const ItineraryView = ({ trip, onPlaceClick, darkTheme = false }) => {
                                      <span className="leading-relaxed">{item.notes}</span>
                                   </div>
                                )}
+                               
+                               {/* Ride Booking Options */}
+                               {distance && distance > 0 && nextItem && (
+                                  <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-between items-center">
+                                     <span className="text-[10px] text-gray-500 font-medium">Book ride to next stop:</span>
+                                     <div className="flex gap-2">
+                                        <a 
+                                           href={`https://book.olacabs.com/?pickup_lat=${item.coordinates.lat}&pickup_lng=${item.coordinates.lng}&pickup_name=${encodeURIComponent(item.name)}&drop_lat=${nextItem.coordinates.lat}&drop_lng=${nextItem.coordinates.lng}&drop_name=${encodeURIComponent(nextItem.name)}`}
+                                           target="_blank" rel="noopener noreferrer"
+                                           onClick={(e) => e.stopPropagation()}
+                                           className="text-[10px] font-bold bg-[#cde021] text-black hover:bg-[#b8c91d] px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                                        >
+                                           Ola
+                                        </a>
+                                        <a 
+                                           href={`https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${item.coordinates.lat}&pickup[longitude]=${item.coordinates.lng}&pickup[nickname]=${encodeURIComponent(item.name)}&dropoff[latitude]=${nextItem.coordinates.lat}&dropoff[longitude]=${nextItem.coordinates.lng}&dropoff[nickname]=${encodeURIComponent(nextItem.name)}`}
+                                           target="_blank" rel="noopener noreferrer"
+                                           onClick={(e) => e.stopPropagation()}
+                                           className="text-[10px] font-bold bg-black text-white hover:bg-gray-800 px-3 py-1 rounded border border-gray-700 flex items-center gap-1 transition-colors"
+                                        >
+                                           Uber
+                                        </a>
+                                     </div>
+                                  </div>
+                               )}
                             </div>
                             
                             {/* Distance Badge */}
