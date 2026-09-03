@@ -7,8 +7,9 @@ const ProtectedRoute = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B1120] text-gray-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-sm font-semibold text-gray-400">Loading TripXora...</p>
       </div>
     );
   }

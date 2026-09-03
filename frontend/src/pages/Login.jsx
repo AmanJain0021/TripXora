@@ -1,5 +1,6 @@
 import React from 'react';
 import LoginForm from '../features/auth/LoginForm';
+import signupBg from '../assets/signup-bg.jpeg';
 
 const Login = () => {
   return (

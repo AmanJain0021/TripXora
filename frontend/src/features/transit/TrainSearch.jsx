@@ -148,7 +148,7 @@ const TrainSearch = ({ currentTrip }) => {
                </div>
             </div>
 
-            <div className="p-3 bg-[#0f172a]/50">
+            <div className="p-3 bg-[#0f172a]/50 flex flex-col gap-2.5">
                <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
                  {train.classes.map((cls, i) => (
                    <div key={i} className={`shrink-0 border rounded-lg p-2 text-center min-w-[70px] ${cls.available ? 'border-emerald-500/30 bg-emerald-500/5 cursor-pointer hover:bg-emerald-500/10' : 'border-gray-700/50 bg-gray-800/30 opacity-60'}`}>
@@ -159,6 +159,24 @@ const TrainSearch = ({ currentTrip }) => {
                      </p>
                    </div>
                  ))}
+               </div>
+
+               <div className="pt-2 border-t border-gray-700/40 flex items-center justify-between">
+                 <span className="text-[11px] text-gray-400 font-medium flex items-center gap-1">
+                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                   IRCTC Verified
+                 </span>
+                 <a
+                   href="https://www.makemytrip.com/railways/"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all flex items-center gap-1.5 active:scale-95"
+                 >
+                   <span>Book Now</span>
+                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                   </svg>
+                 </a>
                </div>
             </div>
           </div>
