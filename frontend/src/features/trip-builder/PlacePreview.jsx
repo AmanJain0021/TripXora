@@ -27,7 +27,6 @@ const PlacePreview = ({ place, trip }) => {
           : place.name;
           
         const searchRes = await searchPlaces(searchQuery);
-        
         const match = searchRes?.find(r => r.name.toLowerCase().includes(place.name.toLowerCase())) || searchRes?.[0];
         
         if (match && match.place_id) {
@@ -67,30 +66,20 @@ const PlacePreview = ({ place, trip }) => {
     return () => { isMounted = false; };
   }, [place, trip]);
 
-  const nextImage = (e) => {
-    e.stopPropagation();
-    setCurrentImageIdx((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = (e) => {
-    e.stopPropagation();
-    setCurrentImageIdx((prev) => (prev - 1 + images.length) % images.length);
-  };
-
   if (!place) return null;
 
   return (
-    <div className="w-full h-full bg-[#0B1120] flex flex-col md:flex-row overflow-hidden text-gray-200">
-      {/* Left Side: Images Carousel */}
-      <div className="w-full md:w-3/5 h-1/2 md:h-full relative bg-black flex items-center justify-center">
+    <div className="w-full h-full bg-white flex flex-col md:flex-row overflow-hidden text-[#172033]">
+      {/* Left Side: Photo Carousel */}
+      <div className="w-full md:w-3/5 h-1/2 md:h-full relative bg-gray-900 flex items-center justify-center">
         {loading ? (
-          <div className="flex flex-col items-center justify-center text-gray-400">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4"></div>
-            <span>Loading high-res photos...</span>
+          <div className="flex flex-col items-center justify-center text-gray-300 text-sm">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3"></div>
+            <span>Loading photos...</span>
           </div>
         ) : images.length > 0 ? (
-          <div className="w-full h-full flex flex-col bg-black">
-            {/* Main Image */}
+          <div className="w-full h-full flex flex-col bg-gray-900">
+            {/* Main Photo */}
             <div className="flex-1 relative overflow-hidden flex items-center justify-center">
               <img 
                 src={images[currentImageIdx]} 
@@ -102,14 +91,14 @@ const PlacePreview = ({ place, trip }) => {
             
             {/* Thumbnails Row */}
             {images.length > 1 && (
-              <div className="h-24 bg-[#0B1120] p-3 flex gap-3 overflow-x-auto custom-scrollbar shrink-0 border-t border-gray-800 items-center">
+              <div className="h-20 bg-gray-950 p-2.5 flex gap-2.5 overflow-x-auto shrink-0 border-t border-gray-800 items-center">
                 {images.map((img, idx) => (
                   <button 
                     key={idx} 
                     onClick={(e) => { e.stopPropagation(); setCurrentImageIdx(idx); }}
                     className={`h-full aspect-[4/3] rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
                       idx === currentImageIdx 
-                        ? 'border-blue-400 opacity-100 shadow-[0_0_10px_rgba(56,189,248,0.5)]' 
+                        ? 'border-[#6D3DF5] opacity-100' 
                         : 'border-transparent opacity-40 hover:opacity-100 scale-95 hover:scale-100'
                     }`}
                   >
@@ -120,9 +109,9 @@ const PlacePreview = ({ place, trip }) => {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center text-gray-500">
-            <svg className="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          <div className="flex flex-col items-center justify-center text-gray-400 text-sm">
+            <svg className="w-10 h-10 mb-2 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span>No photo available</span>
           </div>
@@ -130,25 +119,25 @@ const PlacePreview = ({ place, trip }) => {
       </div>
 
       {/* Right Side: Details */}
-      <div className="w-full md:w-2/5 h-1/2 md:h-full p-8 overflow-y-auto bg-[#161E31] border-l border-gray-800 custom-scrollbar">
+      <div className="w-full md:w-2/5 h-1/2 md:h-full p-6 overflow-y-auto bg-white border-l border-[#E5E7EB]">
         {place.category && (
-          <span className="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+          <span className="badge-purple mb-3">
             {place.category.replace(/_/g, ' ')}
           </span>
         )}
-        <h2 className="text-3xl font-extrabold mb-2 text-white tracking-tight">{place.name}</h2>
+        <h2 className="text-2xl font-extrabold mb-2 text-[#172033] tracking-tight">{place.name}</h2>
         
         {place.rating && (
-          <div className="flex items-center text-yellow-400 mb-6 bg-yellow-400/10 w-max px-2 py-1 rounded">
-            <span className="text-lg mr-1">★</span>
-            <span className="font-bold">{place.rating}</span>
+          <div className="flex items-center text-[#F28C28] mb-4 bg-[#FEF3E7] w-max px-2.5 py-1 rounded-md text-xs font-bold">
+            <span className="mr-1 text-sm">★</span>
+            <span>{place.rating}</span>
           </div>
         )}
         
         {place.formatted_address && (
-          <div className="mb-6">
-            <h4 className="text-xs uppercase text-gray-500 font-bold tracking-wider mb-2">Location</h4>
-            <p className="text-gray-300 text-sm flex items-start gap-2 bg-[#1E293B] p-3 rounded-lg border border-gray-700/50">
+          <div className="mb-4">
+            <h4 className="text-[11px] uppercase text-[#697386] font-bold tracking-wider mb-1.5">Location</h4>
+            <p className="text-[#172033] text-xs font-medium flex items-start gap-2 bg-[#F7F8FA] p-3 rounded-lg border border-[#E5E7EB]">
               <span className="mt-0.5">📍</span>
               <span>{place.formatted_address}</span>
             </p>
@@ -157,10 +146,10 @@ const PlacePreview = ({ place, trip }) => {
         
         {place.notes && (
           <div>
-            <h4 className="text-xs uppercase text-gray-500 font-bold tracking-wider mb-2">TripXora AI Insight</h4>
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-100 text-sm flex items-start gap-3">
-              <span className="text-xl">✨</span>
-              <span className="italic leading-relaxed">{place.notes}</span>
+            <h4 className="text-[11px] uppercase text-[#697386] font-bold tracking-wider mb-1.5">TripXora Travel Insight</h4>
+            <div className="p-3 bg-[#F0EBFF] rounded-lg border border-[#6D3DF5]/20 text-[#6D3DF5] text-xs flex items-start gap-2">
+              <span className="text-base">✨</span>
+              <span className="font-medium leading-relaxed">{place.notes}</span>
             </div>
           </div>
         )}
