@@ -54,7 +54,7 @@ const TripForm = ({ prefilledData }) => {
       const payload = {
         origin: { name: formData.origin },
         destination: { name: formData.destination },
-        startDate: formData.startDate || new Date().toISOString(), // Mock dates if not provided
+        startDate: formData.startDate || new Date().toISOString(),
         endDate: formData.endDate || new Date(Date.now() + 86400000).toISOString(),
         travelers: Number(formData.travelers),
         travelMode: formData.travelMode,
@@ -74,18 +74,23 @@ const TripForm = ({ prefilledData }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-      <h3 className="text-xl font-bold text-gray-900 mb-6">Trip Details</h3>
+    <form onSubmit={handleSubmit} className="travel-card p-8">
+      <h3 className="text-xl font-bold text-[#172033] mb-6 border-b border-[#E5E7EB] pb-3 flex items-center justify-between">
+        <span>Trip Details</span>
+        <span className="badge-purple">
+          Custom Itinerary
+        </span>
+      </h3>
       
       {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded-lg mb-6 text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl mb-6 text-sm">
           {error}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">From (Origin)</label>
           <input
             type="text"
             name="origin"
@@ -93,60 +98,60 @@ const TripForm = ({ prefilledData }) => {
             onChange={handleChange}
             required
             placeholder="e.g. Indore"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] placeholder-[#697386] text-sm font-medium"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">To (Destination)</label>
           <input
             type="text"
             name="destination"
             value={formData.destination}
             onChange={handleChange}
             required
-            placeholder="e.g. Udaipur"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            placeholder="e.g. Bhopal"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] placeholder-[#697386] text-sm font-medium"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Start Date</label>
           <input
             type="date"
             name="startDate"
             value={formData.startDate}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm font-medium"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">End Date</label>
           <input
             type="date"
             name="endDate"
             value={formData.endDate}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm font-medium"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Travelers</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Travelers</label>
           <input
             type="number"
             name="travelers"
             min="1"
             value={formData.travelers}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm font-medium"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Budget (INR)</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Budget (INR ₹)</label>
           <input
             type="number"
             name="budget"
@@ -154,70 +159,70 @@ const TripForm = ({ prefilledData }) => {
             value={formData.budget}
             onChange={handleChange}
             placeholder="e.g. 15000"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] placeholder-[#697386] text-sm font-medium"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Travel Mode</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Travel Mode</label>
           <select
             name="travelMode"
             value={formData.travelMode}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm cursor-pointer font-medium"
           >
-            <option value="car">Car</option>
-            <option value="bike">Bike</option>
-            <option value="bus">Bus</option>
-            <option value="train">Train</option>
-            <option value="flight">Flight</option>
+            <option value="car">🚗 Car / Road Trip</option>
+            <option value="bike">🏍️ Bike</option>
+            <option value="bus">🚌 Bus</option>
+            <option value="train">🚆 Train</option>
+            <option value="flight">✈️ Flight</option>
           </select>
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
-        <select
-          name="ageGroup"
-          value={formData.ageGroup}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-        >
-          <option value="all-ages">All Ages (Mixed)</option>
-          <option value="kids">Kids (0-12 yrs)</option>
-          <option value="teens">Teens (13-17 yrs)</option>
-          <option value="adults">Adults (18-59 yrs)</option>
-          <option value="seniors">Seniors (60+ yrs)</option>
-        </select>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Group Dynamic</label>
+          <select
+            name="ageGroup"
+            value={formData.ageGroup}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm cursor-pointer font-medium"
+          >
+            <option value="all-ages">All Ages (Mixed Family/Friends)</option>
+            <option value="kids">Family with Kids (0-12 yrs)</option>
+            <option value="teens">Youth & Teens (13-17 yrs)</option>
+            <option value="adults">Solo / Adults (18-59 yrs)</option>
+            <option value="seniors">Seniors (60+ yrs)</option>
+          </select>
+        </div>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Type / Accommodation</label>
-        <select
-          name="hotelType"
-          value={formData.hotelType}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-        >
-          <option value="5_star">5 Star Hotel</option>
-          <option value="4_star">4 Star Hotel</option>
-          <option value="3_star">3 Star Hotel</option>
-          <option value="2_star">2 Star Hotel</option>
-          <option value="budget">Budget Hotel</option>
-          <option value="dharamshala">Dharamshala</option>
-          <option value="hostel">Hostel</option>
-          <option value="homestay">Homestay</option>
-          <option value="no_preference">No Preference</option>
-        </select>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Stay Preference</label>
+          <select
+            name="hotelType"
+            value={formData.hotelType}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] text-sm cursor-pointer font-medium"
+          >
+            <option value="5_star">5 Star Hotel / Resort</option>
+            <option value="4_star">4 Star Boutique Hotel</option>
+            <option value="3_star">3 Star Comfortable Hotel</option>
+            <option value="budget">Budget Hotel</option>
+            <option value="homestay">Heritage Homestay</option>
+            <option value="hostel">Backpacker Hostel</option>
+            <option value="no_preference">No Preference</option>
+          </select>
+        </div>
       </div>
 
       <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Interests (comma separated)</label>
+        <label className="block text-xs font-bold uppercase tracking-wider text-[#697386] mb-2">Interests (comma separated)</label>
         <input
           type="text"
           value={formData.interests.join(', ')}
           onChange={handleInterestsChange}
-          placeholder="Historical, Food, Photography"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+          placeholder="Historical, Food, Lakes, Photography, Nature"
+          className="w-full px-4 py-3 bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl focus:ring-2 focus:ring-[#6D3DF5] focus:border-[#6D3DF5] outline-none text-[#172033] placeholder-[#697386] text-sm font-medium"
         />
       </div>
 
@@ -225,9 +230,16 @@ const TripForm = ({ prefilledData }) => {
         <button
           type="submit"
           disabled={loading}
-          className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors shadow-md disabled:opacity-70"
+          className="btn-primary py-3 px-8 text-sm"
         >
-          {loading ? 'Planning...' : 'Plan My Trip'}
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Crafting Itinerary...
+            </>
+          ) : (
+            'Generate My Travel Plan ✈️'
+          )}
         </button>
       </div>
     </form>
