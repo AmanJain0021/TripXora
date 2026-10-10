@@ -50,13 +50,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleGoogleToken = async (token) => {
+    try {
+      setError(null);
+      localStorage.setItem('token', token);
+      const userData = await getMe();
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      localStorage.removeItem('token');
+      setUser(null);
+      setError(err.response?.data?.message || 'Google authentication failed');
+      throw err;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, setError }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, handleGoogleToken, logout, setError }}>
       {children}
     </AuthContext.Provider>
   );
