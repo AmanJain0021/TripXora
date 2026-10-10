@@ -12,6 +12,49 @@ import TrainSearch from '../features/transit/TrainSearch';
 import FlightSearch from '../features/transit/FlightSearch';
 import { calculateRoute } from '../api/routes.api';
 
+const FEATURED_DESTINATIONS = [
+  {
+    id: 'bhopal',
+    name: 'Bhopal',
+    tagline: 'City of Lakes & Ancient Heritage',
+    image: 'https://images.unsplash.com/photo-1627894006066-b457863ee9b4?auto=format&fit=crop&q=80&w=800',
+    route: 'Indore → Bhopal',
+    duration: '3 Days',
+    estCost: '₹12,400',
+    tag: 'Heritage & Nature'
+  },
+  {
+    id: 'jaipur',
+    name: 'Jaipur',
+    tagline: 'The Royal Pink City',
+    image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&q=80&w=800',
+    route: 'Delhi → Jaipur',
+    duration: '4 Days',
+    estCost: '₹18,500',
+    tag: 'Culture & Palaces'
+  },
+  {
+    id: 'goa',
+    name: 'Goa',
+    tagline: 'Sun-kissed Beaches & Portuguese Heritage',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800',
+    route: 'Mumbai → Goa',
+    duration: '5 Days',
+    estCost: '₹24,000',
+    tag: 'Beaches & Relaxation'
+  },
+  {
+    id: 'kerala',
+    name: 'Munnar & Backwaters',
+    tagline: 'God\'s Own Country',
+    image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80&w=800',
+    route: 'Kochi → Munnar',
+    duration: '6 Days',
+    estCost: '₹28,900',
+    tag: 'Hills & Waterways'
+  }
+];
+
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const [searchParams] = useSearchParams();
@@ -25,6 +68,18 @@ const Dashboard = () => {
   const [isCostExpanded, setIsCostExpanded] = useState(false);
   const [showFlightDrawer, setShowFlightDrawer] = useState(false);
   const [showTrainDrawer, setShowTrainDrawer] = useState(false);
+  const [mapSize, setMapSize] = useState('30'); // '30', '50', '70', '100'
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsMapFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (tripId) {
@@ -77,498 +132,421 @@ const Dashboard = () => {
     }
   };
 
-  const handleRemovePlace = async (placeId) => {
-    if (!currentTrip) return;
-    const placeToRemove = currentTrip.selectedPlaces?.find(p => p.placeId === placeId);
-    const updatedPlaces = currentTrip.selectedPlaces?.filter(p => p.placeId !== placeId) || [];
-    
-    try {
-      await updateTrip(currentTrip._id, { selectedPlaces: updatedPlaces });
-      if (currentTrip.status === 'planned' && placeToRemove) {
-        const { replanItinerary } = await import('../api/ai.api');
-        await replanItinerary(currentTrip._id, `Remove "${placeToRemove.name}" from the itinerary and logically fill the gap without going over budget.`);
-        await fetchTrip(currentTrip._id);
-      }
-    } catch (err) {
-      console.error("Failed to remove place", err);
-    }
-  };
-
   const totalDistance = routeDetails ? (routeDetails.totalDistance / 1000).toFixed(0) : 0;
   const totalMinutes = routeDetails ? Math.round(routeDetails.totalDuration / 60) : 0;
   const totalHours = Math.floor(totalMinutes / 60);
   const remMins = totalMinutes % 60;
   const estCost = currentTrip?.budget?.totalEstimated || 0;
 
+  // Main Dashboard overview when no specific trip is open
   if (!tripId) {
     const sortedTrips = [...(trips || [])].sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
     
     return (
-      <div className="min-h-screen bg-[#0B1120] flex font-sans text-gray-200 overflow-hidden">
-        {/* SIDEBAR */}
-        <aside className="w-64 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 relative z-20">
-           {/* Logo */}
-           <div className="p-6 flex items-center gap-3">
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-2 rounded-xl">
-                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col font-sans text-[#172033]">
+        {/* LIGHT NAVBAR */}
+        <header className="bg-white border-b border-[#E5E7EB] sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-8">
+            <Link to="/dashboard" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#6D3DF5] flex items-center justify-center text-white shadow-sm">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-              <div>
-                <h1 className="text-xl font-extrabold text-white tracking-tight">Trip<span className="text-gray-500">Xora</span></h1>
-                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">AI Travel Planner</p>
-              </div>
-           </div>
+              <span className="text-xl font-extrabold text-[#172033] tracking-tight">Trip<span className="text-[#6D3DF5]">Xora</span></span>
+            </Link>
 
-           {/* Navigation */}
-           <nav className="flex-1 px-4 space-y-1 overflow-y-auto" style={{scrollbarWidth: 'none'}}>
-              <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-[#1E293B] text-white rounded-xl font-medium border border-gray-700 shadow-sm">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                Dashboard
+            <nav className="hidden md:flex items-center gap-1">
+              <Link to="/dashboard" className="px-3.5 py-2 text-sm font-bold text-[#6D3DF5] bg-[#F0EBFF] rounded-lg">
+                Explore
               </Link>
-              <Link to="/history" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              <Link to="/history" className="px-3.5 py-2 text-sm font-semibold text-[#697386] hover:text-[#172033] hover:bg-gray-100 rounded-lg transition-colors">
                 My Trips
               </Link>
-              <Link to="/create" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                Plan New Trip
-              </Link>
-              <div 
-                onClick={() => setShowFlightDrawer(true)}
-                className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer group"
-              >
-                <svg className="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                <span>Flight Tickets</span>
-                <span className="ml-auto bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Live</span>
-              </div>
-              <div 
-                onClick={() => setShowTrainDrawer(true)}
-                className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer group"
-              >
-                <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                </svg>
-                <span>Train Tickets</span>
-                <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Live</span>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                Explore Destinations
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Budget Manager
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                Saved Places
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Travel Calendar
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl font-medium transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                Preferences
-              </div>
-              
-              {/* Promo Card */}
-              <div className="mt-8 mx-2 p-4 bg-gradient-to-b from-[#1E293B] to-[#161E31] rounded-2xl border border-gray-800 text-center relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
-                 <div className="w-12 h-12 bg-gray-800 rounded-full mx-auto mb-3 flex items-center justify-center text-xl shadow-lg border border-gray-700">✈️</div>
-                 <h4 className="text-white font-bold text-sm mb-1 relative z-10">Plan Smarter,<br/>Travel Better</h4>
-                 <p className="text-[11px] text-gray-400 mb-4 relative z-10">Let AI craft the perfect itinerary for you.</p>
-                 <Link to="/create" className="relative z-10 block w-full py-2 bg-[#6B46C1] hover:bg-[#553C9A] text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-purple-500/20 flex items-center justify-center gap-1">
-                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                   Plan a New Trip
-                 </Link>
-              </div>
-           </nav>
+              <button onClick={() => setShowFlightDrawer(true)} className="px-3.5 py-2 text-sm font-semibold text-[#697386] hover:text-[#172033] hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-[#4A90E2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                Flights
+              </button>
+              <button onClick={() => setShowTrainDrawer(true)} className="px-3.5 py-2 text-sm font-semibold text-[#697386] hover:text-[#172033] hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-[#1FA774]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                Trains
+              </button>
+            </nav>
+          </div>
 
-           {/* User Profile Footer */}
-           <Link to="/profile" className="p-4 border-t border-gray-800 flex items-center justify-between shrink-0 hover:bg-gray-800/30 transition-colors cursor-pointer">
-              <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold shadow-md">
-                   {user?.name?.charAt(0).toUpperCase()}
-                 </div>
-                 <div className="overflow-hidden">
-                    <p className="text-sm font-bold text-white leading-tight truncate w-32">{user?.name}</p>
-                    <p className="text-[10px] text-gray-500 truncate w-32">{user?.email}</p>
-                 </div>
+          <div className="flex items-center gap-3">
+            <Link to="/create" className="btn-primary">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+              <span>Plan New Trip</span>
+            </Link>
+
+            <Link to="/profile" className="flex items-center gap-2.5 pl-2 border-l border-[#E5E7EB]">
+              <div className="w-9 h-9 rounded-full bg-[#F0EBFF] text-[#6D3DF5] flex items-center justify-center font-bold text-sm border border-[#6D3DF5]/20">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-           </Link>
-        </aside>
+            </Link>
+          </div>
+        </header>
 
-        {/* MAIN CONTENT AREA */}
-        <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-           
-           {/* Decorative Top Gradient Banner */}
-           <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-purple-900/20 via-indigo-900/10 to-transparent pointer-events-none z-0"></div>
+        {/* HERO SECTION */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 space-y-10">
+          
+          {/* Welcome Travel Banner */}
+          <section className="relative rounded-2xl overflow-hidden bg-white border border-[#E5E7EB] shadow-sm p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="relative z-10 max-w-xl">
+              <span className="badge-purple mb-3">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                Travel Explorer Platform
+              </span>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-[#172033] tracking-tight mb-2">
+                Good morning, {user?.name ? user.name.split(' ')[0] : 'Traveler'} 👋
+              </h1>
+              <p className="text-[#697386] text-base mb-6 font-medium leading-relaxed">
+                Where are you heading next? Search destinations or generate a personalized itinerary in seconds.
+              </p>
 
-           {/* Header Area */}
-           <header className="px-10 pt-10 pb-6 flex flex-col md:flex-row md:justify-between items-start md:items-end relative z-10 gap-6">
+              {/* Search Box */}
+              <div className="flex items-center bg-[#F7F8FA] border border-[#E5E7EB] rounded-xl p-2 max-w-lg shadow-inner">
+                <svg className="w-5 h-5 text-[#697386] ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input 
+                  type="text" 
+                  placeholder="Search cities, attractions, or routes (e.g., Indore to Bhopal)..."
+                  className="w-full bg-transparent px-3 py-2 text-sm text-[#172033] placeholder-[#697386] focus:outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') navigate('/create');
+                  }}
+                />
+                <button onClick={() => navigate('/create')} className="btn-primary text-xs shrink-0 py-2">
+                  Start Planning
+                </button>
+              </div>
+            </div>
+
+            {/* Travel Hero Imagery */}
+            <div className="w-full md:w-80 h-52 rounded-xl overflow-hidden shadow-md relative shrink-0 border border-[#E5E7EB]">
+              <img 
+                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=800" 
+                alt="Travel Destination" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#172033]/60 via-transparent to-transparent"></div>
+              <div className="absolute bottom-3 left-4 right-4 text-white">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#FEF3E7]">Spotlight</p>
+                <p className="text-sm font-extrabold">Discover Coastal & Heritage Routes</p>
+              </div>
+            </div>
+          </section>
+
+          {/* YOUR RECENT / UPCOMING TRIPS */}
+          <section>
+            <div className="flex items-center justify-between mb-5">
               <div>
-                 <p className="text-gray-400 font-medium mb-2">Hello, {user?.name ? user.name.split(' ')[0] : 'Traveler'}! <span className="text-xl">👋</span></p>
-                 <h2 className="text-4xl font-extrabold text-white mb-2 tracking-tight">Select a trip from <span className="text-cyan-400">My Trips</span></h2>
-                 <p className="text-gray-500">Your adventures, all in one place.</p>
+                <h2 className="text-2xl font-bold text-[#172033] tracking-tight">Your Travel Overview</h2>
+                <p className="text-sm text-[#697386]">Recent planned journeys and upcoming itineraries</p>
               </div>
-              <div className="flex items-center gap-4 self-end md:self-auto pb-2">
-                 <div className="relative">
-                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                   </div>
-                   <input type="text" placeholder="Search trips, places, destinations..." className="pl-10 pr-4 py-2 w-72 rounded-full border border-gray-700/50 bg-[#161E31]/80 backdrop-blur text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm text-gray-200 placeholder-gray-500" />
-                 </div>
-                 <button className="w-10 h-10 bg-[#161E31] rounded-full flex items-center justify-center text-gray-400 shadow-sm relative hover:bg-gray-800 transition-colors border border-gray-700/50">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                   <span className="absolute top-2 right-2.5 w-2 h-2 bg-purple-500 rounded-full border border-[#161E31]"></span>
-                 </button>
-                 <div className="w-10 h-10 bg-[#1E293B] rounded-full flex items-center justify-center text-cyan-400 font-bold border border-gray-700 shadow-sm">
-                   {user?.name?.charAt(0).toUpperCase()}
-                 </div>
+              <Link to="/history" className="text-sm font-bold text-[#6D3DF5] hover:text-[#5730D4] flex items-center gap-1">
+                View All Trips ({sortedTrips.length}) →
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center h-32 bg-white rounded-xl border border-[#E5E7EB]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6D3DF5]"></div>
               </div>
-           </header>
-
-           {/* Toolbar */}
-           <div className="px-10 pb-6 flex justify-end items-center relative z-10 border-b border-gray-800/50">
-              <div className="flex items-center gap-3">
-                 <div className="relative">
-                    <select className="appearance-none bg-[#161E31] border border-gray-700 text-gray-300 text-sm font-medium rounded-xl pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer shadow-sm">
-                      <option>Sort by: Recent</option>
-                      <option>Oldest</option>
-                      <option>Price</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                 </div>
-                 <div className="flex bg-[#161E31] rounded-xl border border-gray-700 p-1 shadow-sm">
-                    <button className="p-1.5 bg-[#6B46C1] text-white rounded-lg shadow-sm">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    </button>
-                    <button className="p-1.5 text-gray-500 hover:text-gray-300 rounded-lg">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                 </div>
+            ) : sortedTrips.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#E5E7EB] p-10 text-center">
+                <div className="w-12 h-12 bg-[#F0EBFF] text-[#6D3DF5] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#172033] mb-1">No upcoming trips yet</h3>
+                <p className="text-sm text-[#697386] mb-4">Start crafting your first journey with TripXora's smart planner.</p>
+                <Link to="/create" className="btn-primary text-sm">
+                  Create First Trip
+                </Link>
               </div>
-           </div>
-
-           {/* Cards Grid */}
-           <div className="flex-1 overflow-y-auto px-10 py-8 relative z-10" style={{scrollbarWidth: 'none'}}>
-              {loading ? (
-                 <div className="flex justify-center items-center h-40">
-                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
-                 </div>
-              ) : sortedTrips.length === 0 ? (
-                 <div className="text-center mt-20">
-                   <h3 className="text-2xl font-bold text-gray-300 mb-2">No trips planned yet</h3>
-                   <p className="text-gray-500">Start exploring destinations and craft your first itinerary.</p>
-                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-                  {sortedTrips.map((trip) => {
-                    const destName = trip.destination?.name ? trip.destination.name.split(',')[0] : 'Destination';
-                    const imageUrl = `https://picsum.photos/seed/${trip._id}/800/600`;
-                    
-                    return (
-                      <div
-                        key={trip._id}
-                        onClick={() => {
-                          navigate(`/dashboard?tripId=${trip._id}`);
-                        }}
-                        className="bg-[#161E31] rounded-[20px] shadow-lg border border-gray-800 hover:border-gray-600 hover:-translate-y-1 transition-all duration-300 group overflow-hidden flex flex-col cursor-pointer"
-                      >
-                        {/* Image Header */}
-                        <div className="h-[180px] relative overflow-hidden shrink-0 bg-gray-900 m-2 rounded-xl">
-                          <img 
-                             src={imageUrl} 
-                             alt={trip.destination.name} 
-                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
-                          />
-                          
-                          {/* PLANNED Badge */}
-                          <div className="absolute top-3 right-3 z-10">
-                            <span className="px-3 py-1 text-[10px] font-extrabold rounded-full tracking-wider bg-green-900/80 backdrop-blur text-green-400 border border-green-800">
-                              {trip.status.toUpperCase()}
-                            </span>
-                          </div>
-
-                          {/* Favorite Heart */}
-                          <button 
-                             onClick={(e) => { e.stopPropagation(); }}
-                             className="absolute top-12 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-gray-300 hover:bg-black/60 hover:text-red-400 transition-colors border border-gray-700/50"
-                          >
-                             <svg className="w-4 h-4" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                          </button>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedTrips.slice(0, 3).map((trip) => {
+                  const destName = trip.destination?.name ? trip.destination.name.split(',')[0] : 'Destination';
+                  const imageUrl = `https://picsum.photos/seed/${trip._id}/800/600`;
+                  
+                  return (
+                    <div
+                      key={trip._id}
+                      onClick={() => navigate(`/dashboard?tripId=${trip._id}`)}
+                      className="travel-card travel-card-hover group flex flex-col overflow-hidden"
+                    >
+                      <div className="h-44 relative overflow-hidden bg-gray-100">
+                        <img 
+                          src={imageUrl} 
+                          alt={destName} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 right-3">
+                          <span className="badge-green shadow-sm">
+                            {trip.status ? trip.status.toUpperCase() : 'PLANNED'}
+                          </span>
                         </div>
-                        
-                        {/* Card Body */}
-                        <div className="px-5 pb-5 pt-3 flex-1 flex flex-col justify-between">
-                          <div className="mb-4">
-                            <h3 className="text-[20px] font-bold text-gray-100 leading-tight mb-1">
+                      </div>
+
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-[#172033] group-hover:text-[#6D3DF5] transition-colors">
                               {destName}
                             </h3>
-                            <p className="text-gray-400 text-xs font-semibold">From {trip.origin.name.split(',')[0]}</p>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-y-4 gap-x-2 mb-6">
-                            {/* Dates */}
-                            <div className="col-span-2 flex items-center text-gray-300 text-xs font-semibold">
-                              <div className="w-6 h-6 rounded flex items-center justify-center mr-2 text-indigo-400 shrink-0 bg-indigo-500/10 border border-indigo-500/20">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                              </div>
-                              <span>
-                                {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} 
-                                {' - '}
-                                {new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </span>
-                            </div>
-                            
-                            {/* Travelers */}
-                            <div className="flex items-center text-gray-300 text-xs font-semibold">
-                              <div className="w-6 h-6 rounded flex items-center justify-center mr-2 text-orange-400 shrink-0 bg-orange-500/10 border border-orange-500/20">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                              </div>
-                              <span>{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
-                            </div>
-
-                            {/* Budget */}
-                            <div className="flex items-center text-gray-300 text-xs font-semibold">
-                              <div className="w-6 h-6 rounded flex items-center justify-center mr-2 text-emerald-400 shrink-0 bg-emerald-500/10 border border-emerald-500/20">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                              </div>
-                              <span>
-                                {trip.budget?.totalBudget ? `₹${trip.budget.totalBudget.toLocaleString()}` : 'No Budget'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Card Footer */}
-                          <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-800">
-                            <span className="text-xs font-bold text-[#7E57C2] group-hover:text-purple-400 transition-colors">
-                              View Details
+                            <span className="badge-purple shrink-0 text-[11px]">
+                              {trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}
                             </span>
-                            <div className="w-7 h-7 rounded-full border border-purple-900 flex items-center justify-center text-[#7E57C2] group-hover:bg-[#7E57C2] group-hover:border-[#7E57C2] group-hover:text-white transition-all">
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </div>
+                          </div>
+                          <p className="text-xs font-semibold text-[#697386] mb-3">
+                            From {trip.origin?.name ? trip.origin.name.split(',')[0] : 'Origin'}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 pt-3 border-t border-[#E5E7EB]">
+                          <div className="flex items-center justify-between text-xs text-[#697386]">
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <svg className="w-3.5 h-3.5 text-[#4A90E2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              {trip.startDate ? new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Dates flexible'}
+                            </span>
+                            <span className="font-bold text-[#1FA774]">
+                              {trip.budget?.totalBudget ? `₹${trip.budget.totalBudget.toLocaleString()}` : 'Budget Flexible'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 text-xs font-bold text-[#6D3DF5]">
+                            <span>View Itinerary</span>
+                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                 </div>
-              )}
-           </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* EXPLORE FEATURED DESTINATIONS */}
+          <section className="pt-4">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-[#172033] tracking-tight">Explore Destinations</h2>
+              <p className="text-sm text-[#697386]">Handcrafted route inspiration for your next getaway</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {FEATURED_DESTINATIONS.map((dest) => (
+                <div 
+                  key={dest.id}
+                  onClick={() => navigate(`/create`)}
+                  className="travel-card travel-card-hover group flex flex-col overflow-hidden"
+                >
+                  <div className="h-48 relative overflow-hidden bg-gray-100">
+                    <img 
+                      src={dest.image} 
+                      alt={dest.name} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="badge-orange shadow-sm">
+                        {dest.tag}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-[#172033] group-hover:text-[#6D3DF5] transition-colors mb-0.5">
+                        {dest.name}
+                      </h3>
+                      <p className="text-xs text-[#697386] mb-3">{dest.tagline}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#172033]">{dest.route}</span>
+                      <span className="font-bold text-[#1FA774]">{dest.estCost}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </main>
 
-        {/* Slide Out Flight Search Panel for Main Dashboard */}
+        {/* Slide Out Flight Search Panel */}
         {showFlightDrawer && (
-           <div className="fixed inset-y-0 right-0 w-96 bg-[#0f172a] border-l border-gray-700 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300">
-              <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#161E31]">
-                 <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                   <svg className="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                   </svg>
-                   Flight Finder
-                 </h3>
-                 <button onClick={() => setShowFlightDrawer(false)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-800">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                 </button>
-              </div>
-              <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
-                 <FlightSearch currentTrip={null} />
-              </div>
-           </div>
+          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white border-l border-[#E5E7EB] shadow-2xl z-[100] flex flex-col">
+            <div className="p-4 border-b border-[#E5E7EB] flex justify-between items-center bg-[#F7F8FA]">
+              <h3 className="font-bold text-[#172033] text-lg flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#4A90E2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                Flight Finder
+              </h3>
+              <button onClick={() => setShowFlightDrawer(false)} className="text-[#697386] hover:text-[#172033] p-1 rounded-lg hover:bg-gray-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <FlightSearch currentTrip={null} />
+            </div>
+          </div>
         )}
 
-        {/* Slide Out Train Search Panel for Main Dashboard */}
+        {/* Slide Out Train Search Panel */}
         {showTrainDrawer && (
-           <div className="fixed inset-y-0 right-0 w-96 bg-[#0f172a] border-l border-gray-700 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300">
-              <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#161E31]">
-                 <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                   <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                   </svg>
-                   Train Finder
-                 </h3>
-                 <button onClick={() => setShowTrainDrawer(false)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-800">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                 </button>
-              </div>
-              <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
-                 <TrainSearch currentTrip={null} />
-              </div>
-           </div>
+          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white border-l border-[#E5E7EB] shadow-2xl z-[100] flex flex-col">
+            <div className="p-4 border-b border-[#E5E7EB] flex justify-between items-center bg-[#F7F8FA]">
+              <h3 className="font-bold text-[#172033] text-lg flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#1FA774]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                Train Finder
+              </h3>
+              <button onClick={() => setShowTrainDrawer(false)} className="text-[#697386] hover:text-[#172033] p-1 rounded-lg hover:bg-gray-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <TrainSearch currentTrip={null} />
+            </div>
+          </div>
         )}
       </div>
     );
   }
 
+  // Active Trip Detail View
   return (
-    <div className="min-h-screen bg-[#0B1120] flex flex-col font-sans text-gray-200">
-      {/* Top Navbar */}
-      <header className="bg-[#0B1120] sticky top-0 z-50 border-b border-gray-800 px-8 py-3 flex justify-between items-center shadow-lg">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col font-sans text-[#172033]">
+      {/* Top Travel Header */}
+      <header className="bg-white sticky top-0 z-50 border-b border-[#E5E7EB] px-6 py-3 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-r from-blue-500 to-cyan-400 p-2 rounded-xl">
-             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Trip<span className="text-gray-500">Xora</span></h1>
-          <span className="text-xs font-semibold text-gray-400 ml-2 mt-1">AI-Powered Travel Planner</span>
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#6D3DF5] flex items-center justify-center text-white">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h1 className="text-xl font-extrabold text-[#172033] tracking-tight">Trip<span className="text-[#6D3DF5]">Xora</span></h1>
+          </Link>
+          <span className="hidden sm:inline-block text-xs font-semibold text-[#697386] border-l border-[#E5E7EB] pl-3 py-1">
+            {currentTrip?.origin?.name?.split(',')[0]} → {currentTrip?.destination?.name?.split(',')[0]}
+          </span>
         </div>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           {tripId && currentTrip && (
             <>
-              {/* Estimated Cost Dropdown */}
+              {/* Cost Breakdown */}
               <div className="relative">
                 <button 
                   onClick={() => setIsCostExpanded(!isCostExpanded)}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-bold transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#E6F6F0] text-[#1FA774] border border-[#1FA774]/20 rounded-lg text-xs font-bold transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   ₹{estCost.toLocaleString()}
-                  <svg className={`w-4 h-4 transition-transform ${isCostExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  <svg className={`w-3.5 h-3.5 transition-transform ${isCostExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 
                 {isCostExpanded && (
-                  <div className="absolute top-full mt-2 right-0 w-64 bg-[#1E293B] rounded-xl border border-gray-700 shadow-2xl p-4 z-[100]">
-                     <h4 className="text-white font-bold mb-3 border-b border-gray-700 pb-2">Cost Breakdown</h4>
-                     <div className="space-y-3 text-sm">
-                       <div className="flex justify-between">
-                         <span className="text-gray-400">Transport (Fuel & Toll)</span>
-                         <span className="text-white font-medium">₹{Math.round(estCost * 0.35).toLocaleString()}</span>
-                       </div>
-                       <div className="flex justify-between">
-                         <span className="text-gray-400">Stay ({currentTrip?.itinerary?.length || 0} Nights)</span>
-                         <span className="text-white font-medium">₹{Math.round(estCost * 0.35).toLocaleString()}</span>
-                       </div>
-                       <div className="flex justify-between">
-                         <span className="text-gray-400">Food</span>
-                         <span className="text-white font-medium">₹{Math.round(estCost * 0.20).toLocaleString()}</span>
-                       </div>
-                       <div className="flex justify-between">
-                         <span className="text-gray-400">Activities & Entry</span>
-                         <span className="text-white font-medium">₹{Math.round(estCost * 0.10).toLocaleString()}</span>
-                       </div>
-                     </div>
+                  <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl border border-[#E5E7EB] shadow-xl p-4 z-[100]">
+                    <h4 className="text-[#172033] font-bold mb-3 border-b border-[#E5E7EB] pb-2 text-sm">Est. Budget Breakdown</h4>
+                    <div className="space-y-2.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-[#697386]">Transport & Fuel</span>
+                        <span className="text-[#172033] font-semibold">₹{Math.round(estCost * 0.35).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#697386]">Stay ({currentTrip?.itinerary?.length || 0} Nights)</span>
+                        <span className="text-[#172033] font-semibold">₹{Math.round(estCost * 0.35).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#697386]">Food & Dining</span>
+                        <span className="text-[#172033] font-semibold">₹{Math.round(estCost * 0.20).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#697386]">Activities</span>
+                        <span className="text-[#172033] font-semibold">₹{Math.round(estCost * 0.10).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               <button 
                 onClick={() => { setShowToolsPanel(true); setActiveTab('flights'); }}
-                className="flex items-center gap-2 px-3.5 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg text-sm font-semibold transition-colors"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#EBF3FC] text-[#4A90E2] border border-[#4A90E2]/20 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 Flights
               </button>
 
               <button 
                 onClick={() => { setShowToolsPanel(true); setActiveTab('trains'); }}
-                className="flex items-center gap-2 px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-semibold transition-colors"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#E6F6F0] text-[#1FA774] border border-[#1FA774]/20 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                </svg>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
                 Trains
               </button>
 
               <button 
                 onClick={() => setShowToolsPanel(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1E293B] hover:bg-[#334155] rounded-lg text-sm font-semibold text-white transition-colors border border-gray-700"
+                className="btn-secondary text-xs py-1.5"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                Discover Places & Tools
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <span>Tools</span>
               </button>
             </>
           )}
           
-          <Link to="/history" className="text-sm font-semibold text-gray-400 hover:text-white transition-colors">
-            My Trips
-          </Link>
-          <div className="h-5 w-px bg-gray-700"></div>
-          <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <span className="text-sm font-semibold text-white hidden md:block">{user?.name}</span>
-          </Link>
-          <button onClick={logout} className="text-sm p-2 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors ml-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="btn-primary text-xs py-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            Dashboard
+          </button>
+
+          <button onClick={logout} className="text-[#697386] hover:text-red-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           </button>
         </div>
       </header>
 
+      {/* TRIP ITINERARY + MAP MAIN LAYOUT */}
       <main className="flex-1 p-4 md:p-6 overflow-hidden relative">
         {loading || !currentTrip ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#6D3DF5]"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-100px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 h-[calc(100vh-90px)] relative">
             
-            {/* LEFT SIDEBAR */}
-            <div className="lg:col-span-3 flex flex-col h-full gap-4 overflow-y-auto pr-2" style={{scrollbarWidth: 'none'}}>
-              
-              <div className="mb-2">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  Your Trip to {currentTrip?.destination?.name || 'Destination'} <span className="text-yellow-400 text-xl">✨</span>
-                </h2>
-                <p className="text-sm text-gray-400 mt-1">
-                  <span className="text-emerald-400 font-semibold">{currentTrip?.origin?.name || 'Origin'}</span> → <span className="text-blue-400 font-semibold">{currentTrip?.destination?.name || 'Destination'}</span> ({currentTrip?.itinerary?.length || 0} Days)
-                </p>
-              </div>
+            {/* MAP SECTION */}
+            <div className={`flex flex-col h-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden relative shadow-sm transition-all duration-300 ${
+              isMapFullscreen 
+                ? 'fixed inset-4 z-[200] rounded-xl bg-white border-2 border-[#6D3DF5] shadow-2xl' 
+                : mapSize === '30' ? 'lg:col-span-3' : mapSize === '50' ? 'lg:col-span-5' : mapSize === '70' ? 'lg:col-span-7' : 'lg:col-span-10'
+            }`}>
+               
+               {/* Map Controls */}
+               <div className="absolute top-3 left-3 z-30 flex items-center gap-1 bg-white/90 backdrop-blur border border-[#E5E7EB] p-1 rounded-lg shadow-sm">
+                 <span className="text-[10px] font-bold text-[#697386] px-1 uppercase tracking-wider hidden sm:inline">Map Size:</span>
+                 {['30', '50', '70', '100'].map(size => (
+                   <button 
+                     key={size}
+                     onClick={() => setMapSize(size)}
+                     className={`px-2 py-0.5 text-xs font-bold rounded ${mapSize === size ? 'bg-[#6D3DF5] text-white' : 'text-[#697386] hover:bg-gray-100'}`}
+                   >
+                     {size}%
+                   </button>
+                 ))}
+               </div>
 
-              {/* Top Stats Row */}
-              <div className="bg-[#161E31] rounded-2xl p-4 flex justify-between border border-gray-800/80 shadow-sm">
-                 <div className="text-center flex-1">
-                   <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-wider">Total Distance</p>
-                   <p className="text-white font-semibold">{totalDistance} km</p>
-                 </div>
-                 <div className="w-px bg-gray-700"></div>
-                 <div className="text-center flex-1">
-                   <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-wider">Total Time</p>
-                   <p className="text-white font-semibold">{totalHours} h {remMins} m</p>
-                 </div>
-                 <div className="w-px bg-gray-700"></div>
-                 <div className="text-center flex-1">
-                   <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-wider">Est. Cost</p>
-                   <p className="text-emerald-400 font-semibold">₹{estCost.toLocaleString()}</p>
-                 </div>
-              </div>
-
-              {/* Itinerary Overview */}
-              <div className="bg-[#161E31] rounded-2xl p-5 border border-gray-800/80 flex-1 overflow-y-auto shadow-sm" style={{scrollbarWidth: 'none'}}>
-                 <h3 className="text-white font-bold mb-4 flex items-center justify-between">
-                   Itinerary Overview
-                   {currentTrip.status !== 'planned' && (
-                      <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draft</span>
-                   )}
-                 </h3>
-                 <ItineraryView trip={currentTrip} onPlaceClick={setPreviewPlace} darkTheme={true} />
-              </div>
-
-
-            </div>
-
-            {/* RIGHT MAP AREA */}
-            <div className="lg:col-span-9 flex flex-col h-full bg-[#161E31] rounded-2xl border border-gray-800/80 overflow-hidden relative shadow-lg">
                {previewPlace ? (
-                 <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-8">
-                   <div className="w-full max-w-5xl h-[80%] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-[#0B1120]">
+                 <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+                   <div className="w-full max-w-4xl h-[85%] relative rounded-xl overflow-hidden shadow-2xl bg-white">
                      <PlacePreview place={previewPlace} trip={currentTrip} />
                      <button 
                        onClick={() => setPreviewPlace(null)} 
-                       className="absolute top-4 right-4 z-50 bg-black/50 backdrop-blur text-white p-2 rounded-full hover:bg-red-500 transition-colors"
+                       className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur text-[#172033] p-1.5 rounded-full hover:bg-red-500 hover:text-white transition-colors"
                      >
-                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                      </button>
                    </div>
                  </div>
@@ -578,92 +556,126 @@ const Dashboard = () => {
                   <TripMap trip={currentTrip} routeDetails={routeDetails} onPlaceClick={setPreviewPlace} />
                </div>
 
-               {/* Bottom Bar Features */}
-               <div className="h-20 bg-[#0B1120] border-t border-gray-800/80 flex items-center justify-around px-4 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border border-gray-700 bg-[#161E31] flex items-center justify-center text-blue-400">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-blue-400 leading-tight">Smart Route</p>
-                      <p className="text-[11px] text-gray-500">Optimized route for less travel time</p>
-                    </div>
+               {/* Bottom Route Summary Bar */}
+               <div className="py-2.5 bg-[#F7F8FA] border-t border-[#E5E7EB] grid grid-cols-2 md:grid-cols-4 gap-2 px-3 shrink-0 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#4A90E2]"></span>
+                    <p className="font-semibold text-[#172033] truncate">Smart Route Active</p>
                   </div>
-                  <div className="w-px h-10 bg-gray-800"></div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border border-gray-700 bg-[#161E31] flex items-center justify-center text-teal-400">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-teal-400 leading-tight">Top Attractions</p>
-                      <p className="text-[11px] text-gray-500">Handpicked places for best experience</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#F28C28]"></span>
+                    <p className="font-semibold text-[#172033] truncate">Top Attractions</p>
                   </div>
-                  <div className="w-px h-10 bg-gray-800"></div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border border-gray-700 bg-[#161E31] flex items-center justify-center text-emerald-400">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-emerald-400 leading-tight">Budget Optimized</p>
-                      <p className="text-[11px] text-gray-500">Best options within your budget</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#1FA774]"></span>
+                    <p className="font-semibold text-[#172033] truncate">Budget Optimized</p>
                   </div>
-                  <div className="w-px h-10 bg-gray-800"></div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border border-gray-700 bg-[#161E31] flex items-center justify-center text-purple-400">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-purple-400 leading-tight">Real-time Updates</p>
-                      <p className="text-[11px] text-gray-500">Traffic, weather & route updates</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#6D3DF5]"></span>
+                    <p className="font-semibold text-[#172033] truncate">Live Itinerary Sync</p>
                   </div>
                </div>
             </div>
 
-            {/* Slide Out Discover Panel */}
+            {/* ITINERARY OVERVIEW SECTION */}
+            {!isMapFullscreen && mapSize !== '100' && (
+              <div className={`flex flex-col h-full gap-4 overflow-y-auto transition-all duration-300 ${
+                mapSize === '30' ? 'lg:col-span-7' : mapSize === '50' ? 'lg:col-span-5' : 'lg:col-span-3'
+              }`}>
+                
+                {/* Destination Hero Header */}
+                <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-sm">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <span className="badge-purple mb-1">
+                        {currentTrip?.itinerary?.length || 0} Day Itinerary
+                      </span>
+                      <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight">
+                        {currentTrip?.destination?.name?.split(',')[0] || 'Destination'}
+                      </h2>
+                      <p className="text-xs font-semibold text-[#697386]">
+                        {currentTrip?.origin?.name?.split(',')[0]} → {currentTrip?.destination?.name?.split(',')[0]}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-xs text-[#697386] block font-medium">Est. Total</span>
+                      <span className="text-lg font-extrabold text-[#1FA774]">₹{estCost.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Trip Stats Bar */}
+                  <div className="grid grid-cols-3 gap-2 bg-[#F7F8FA] p-3 rounded-lg border border-[#E5E7EB] text-center text-xs">
+                    <div>
+                      <span className="text-[#697386] block text-[10px] uppercase font-bold">Distance</span>
+                      <span className="font-bold text-[#172033]">{totalDistance} km</span>
+                    </div>
+                    <div>
+                      <span className="text-[#697386] block text-[10px] uppercase font-bold">Duration</span>
+                      <span className="font-bold text-[#172033]">{totalHours}h {remMins}m</span>
+                    </div>
+                    <div>
+                      <span className="text-[#697386] block text-[10px] uppercase font-bold">Pace</span>
+                      <span className="font-bold text-[#6D3DF5] capitalize">{currentTrip?.travelStyle || 'Balanced'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Day-by-day Itinerary Component */}
+                <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 flex-1 overflow-y-auto shadow-sm">
+                   <h3 className="text-[#172033] font-extrabold mb-4 text-base flex items-center justify-between">
+                     Itinerary Journal
+                     {currentTrip.status !== 'planned' && (
+                        <span className="badge-orange text-[10px]">Drafting</span>
+                     )}
+                   </h3>
+                   <ItineraryView trip={currentTrip} onPlaceClick={setPreviewPlace} darkTheme={false} />
+                </div>
+              </div>
+            )}
+
+            {/* Slide Out Discover & Tools Panel */}
             {showToolsPanel && (
-               <div className="absolute inset-y-0 right-0 w-96 bg-[#0f172a] border-l border-gray-700 shadow-2xl z-[60] flex flex-col transform transition-transform duration-300">
-                  <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#161E31]">
-                     <h3 className="font-bold text-white text-lg">Trip Tools</h3>
-                     <button onClick={() => setShowToolsPanel(false)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-800">
-                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+               <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white border-l border-[#E5E7EB] shadow-2xl z-[60] flex flex-col">
+                  <div className="p-4 border-b border-[#E5E7EB] flex justify-between items-center bg-[#F7F8FA]">
+                     <h3 className="font-bold text-[#172033] text-base">Travel Tools & Discovery</h3>
+                     <button onClick={() => setShowToolsPanel(false)} className="text-[#697386] hover:text-[#172033] p-1 rounded-lg hover:bg-gray-200">
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                      </button>
                   </div>
-                  <div className="flex border-b border-gray-800 shrink-0 bg-[#161E31]">
+                  <div className="flex border-b border-[#E5E7EB] bg-[#F7F8FA]">
                      <button 
-                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'discover' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-2.5 text-xs font-bold transition-colors ${activeTab === 'discover' ? 'text-[#6D3DF5] border-b-2 border-[#6D3DF5] bg-white' : 'text-[#697386] hover:text-[#172033]'}`}
                        onClick={() => setActiveTab('discover')}
                      >
-                       Discover
+                       Places
                      </button>
                      <button 
-                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'trains' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-2.5 text-xs font-bold transition-colors ${activeTab === 'trains' ? 'text-[#1FA774] border-b-2 border-[#1FA774] bg-white' : 'text-[#697386] hover:text-[#172033]'}`}
                        onClick={() => setActiveTab('trains')}
                      >
                        Trains
                      </button>
                      <button 
-                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'flights' ? 'text-sky-400 border-b-2 border-sky-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-2.5 text-xs font-bold transition-colors ${activeTab === 'flights' ? 'text-[#4A90E2] border-b-2 border-[#4A90E2] bg-white' : 'text-[#697386] hover:text-[#172033]'}`}
                        onClick={() => setActiveTab('flights')}
                      >
                        Flights
                      </button>
                      <button 
-                       className={`flex-1 py-3 text-xs font-semibold transition-colors ${activeTab === 'budget' ? 'text-blue-400 border-b-2 border-blue-400 bg-[#1E293B]' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`flex-1 py-2.5 text-xs font-bold transition-colors ${activeTab === 'budget' ? 'text-[#6D3DF5] border-b-2 border-[#6D3DF5] bg-white' : 'text-[#697386] hover:text-[#172033]'}`}
                        onClick={() => setActiveTab('budget')}
                      >
                        Budget
                      </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto bg-[#0f172a] custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4">
                      {activeTab === 'discover' && (
                        <PlaceSearch 
                          destination={currentTrip?.destination?.name || ''} 
                          onAddPlace={handleAddPlace} 
                          onPlaceClick={setPreviewPlace}
-                         darkTheme={true}
+                         darkTheme={false}
                        />
                      )}
                      {activeTab === 'trains' && (
