@@ -16,9 +16,19 @@ const userSchema = new mongoose.Schema({
       'Please provide a valid email',
     ],
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: [
+      function () {
+        return !this.googleId;
+      },
+      'Please provide a password',
+    ],
     minlength: 6,
     select: false,
   },
@@ -49,9 +59,9 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Encrypt password using bcrypt
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password') || !this.password) {
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -60,6 +70,9 @@ userSchema.pre('save', async function (next) {
 
 // Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) {
+    return false;
+  }
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
