@@ -205,6 +205,14 @@ const ItineraryView = ({ trip, onPlaceClick, darkTheme = false }) => {
                                         >
                                            Uber
                                         </a>
+                                        <a 
+                                           href={`https://www.google.com/maps/dir/?api=1&origin=${item.coordinates.lat},${item.coordinates.lng}&destination=${nextItem.coordinates.lat},${nextItem.coordinates.lng}&travelmode=driving`}
+                                           target="_blank" rel="noopener noreferrer"
+                                           onClick={(e) => e.stopPropagation()}
+                                           className="text-[10px] font-bold bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                                        >
+                                           Maps
+                                        </a>
                                      </div>
                                   </div>
                                )}
