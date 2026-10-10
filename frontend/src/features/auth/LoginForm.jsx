@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +8,14 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, error, setError } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+  }, [searchParams, setError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
