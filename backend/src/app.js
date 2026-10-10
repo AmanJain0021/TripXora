@@ -3,11 +3,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const errorHandler = require('./middlewares/errorHandler');
+const passport = require('passport');
+const configurePassport = require('./config/passport');
 
 const app = express();
 
+// Initialize Passport Strategy
+configurePassport();
+
 // Middleware
 app.use(helmet());
+app.use(passport.initialize());
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
   : ['http://localhost:5173', 'http://localhost:5174'];

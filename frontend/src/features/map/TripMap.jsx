@@ -4,7 +4,7 @@ import { GoogleMap, useJsApiLoader, Polyline, OverlayView } from '@react-google-
 const containerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '16px'
+  borderRadius: '12px'
 };
 
 const defaultCenter = {
@@ -15,24 +15,23 @@ const defaultCenter = {
 const libraries = ['geometry'];
 
 const CustomMarker = ({ position, type, title, subtitle, imageUrl, points, onClick }) => {
-  let colorClass = 'bg-red-500';
-  let dotColor = 'bg-red-400';
+  let colorClass = 'bg-[#F28C28]';
+  let dotColor = 'bg-[#FEF3E7]';
   
   if (type === 'origin') {
-    colorClass = 'bg-emerald-500';
-    dotColor = 'bg-emerald-400';
+    colorClass = 'bg-[#1FA774]';
+    dotColor = 'bg-[#E6F6F0]';
   } else if (type === 'destination') {
-    colorClass = 'bg-purple-500';
-    dotColor = 'bg-purple-400';
+    colorClass = 'bg-[#6D3DF5]';
+    dotColor = 'bg-[#F0EBFF]';
   } else if (type === 'stay') {
-    colorClass = 'bg-indigo-500';
-    dotColor = 'bg-indigo-400';
+    colorClass = 'bg-[#4A90E2]';
+    dotColor = 'bg-[#EBF3FC]';
   }
 
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
-    // Trigger animation after initial render
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => setMounted(true));
     });
@@ -46,37 +45,29 @@ const CustomMarker = ({ position, type, title, subtitle, imageUrl, points, onCli
       getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -height })}
     >
       <div 
-        className="relative group cursor-pointer transition-all duration-700 ease-out z-10 hover:z-50" 
+        className="relative group cursor-pointer transition-all duration-500 ease-out z-10 hover:z-50" 
         style={{
-          transform: mounted ? 'scale(1) translateY(0)' : 'scale(0) translateY(-40px)',
+          transform: mounted ? 'scale(1) translateY(0)' : 'scale(0) translateY(-20px)',
           opacity: mounted ? 1 : 0
         }}
         onClick={onClick}
       >
-        {/* The Map Pin */}
+        {/* Map Pin */}
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,0,0,0.5)] border-2 border-white ${colorClass} transition-transform group-hover:scale-110`}>
-             <div className={`w-2 h-2 rounded-full ${dotColor} shadow-inner`}></div>
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white ${colorClass} transition-transform group-hover:scale-110`}>
+             <div className={`w-2 h-2 rounded-full ${dotColor}`}></div>
           </div>
-          <div className="w-0.5 h-3 bg-white shadow-sm mt-0.5"></div>
+          <div className="w-0.5 h-2.5 bg-[#172033] shadow-xs"></div>
         </div>
         
-        {/* The Info Card */}
-        <div className="absolute bottom-9 left-1/2 transform -translate-x-1/2 w-max bg-[#1E293B]/90 backdrop-blur-md rounded-lg p-1.5 border border-gray-700/80 shadow-xl flex items-center gap-2 transition-all duration-300 opacity-90 group-hover:opacity-100 group-hover:scale-110 group-hover:z-50">
-          <div className="flex flex-col text-left pl-1 pr-0.5">
-            <span className="text-white font-bold text-[11px] tracking-wide truncate max-w-[120px] leading-tight" title={title}>{title}</span>
-            {subtitle && <span className="text-gray-400 text-[9px] mt-0.5">{subtitle}</span>}
-            {points && points.length > 0 && (
-              <ul className="text-gray-300 text-[9px] mt-0.5 space-y-0.5">
-                {points.slice(0, 1).map((p, i) => (
-                  <li key={i} className="truncate max-w-[100px]">• {p}</li>
-                ))}
-                {points.length > 1 && <li className="text-gray-500 italic">+ {points.length - 1} more</li>}
-              </ul>
-            )}
+        {/* Info Card */}
+        <div className="absolute bottom-9 left-1/2 transform -translate-x-1/2 w-max bg-white rounded-lg p-2 border border-[#E5E7EB] shadow-lg flex items-center gap-2 transition-all duration-300 opacity-95 group-hover:opacity-100 group-hover:scale-105">
+          <div className="flex flex-col text-left">
+            <span className="text-[#172033] font-bold text-xs leading-tight truncate max-w-[130px]" title={title}>{title}</span>
+            {subtitle && <span className="text-[#697386] text-[10px] font-medium">{subtitle}</span>}
           </div>
           {imageUrl && (
-            <img src={imageUrl} alt={title} className="w-9 h-9 rounded object-cover border border-gray-600/50 shadow-inner shrink-0" />
+            <img src={imageUrl} alt={title} className="w-8 h-8 rounded object-cover border border-[#E5E7EB] shrink-0" />
           )}
         </div>
       </div>
@@ -148,7 +139,6 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
   useEffect(() => {
     if (map && allMarkers.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
-      // Ignore origin when fitting bounds to zoom into the destination places
       const placesToBound = allMarkers.filter(m => m.type !== 'origin');
       
       if (placesToBound.length > 0) {
@@ -159,7 +149,6 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
       
       map.fitBounds(bounds);
       
-      // Prevent zooming in too close if there are only a few places very close to each other
       const listener = window.google.maps.event.addListener(map, 'idle', () => {
         if (map.getZoom() > 14) map.setZoom(14);
         window.google.maps.event.removeListener(listener);
@@ -171,11 +160,10 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
     setMap(null);
   }, []);
 
-
   const [visibleCount, setVisibleCount] = useState(0);
 
   useEffect(() => {
-    setVisibleCount(0); // reset on trip change
+    setVisibleCount(0);
     if (isLoaded && map && allMarkers.length > 0) {
       let count = 0;
       const interval = setInterval(() => {
@@ -184,13 +172,13 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
         if (count >= allMarkers.length) {
           clearInterval(interval);
         }
-      }, 400); // 400ms delay between pins
+      }, 300);
       
       return () => clearInterval(interval);
     }
   }, [isLoaded, map, allMarkers.length]);
 
-  if (!isLoaded) return <div className="w-full h-full bg-[#161E31] animate-pulse rounded-2xl border border-gray-800"></div>;
+  if (!isLoaded) return <div className="w-full h-full bg-[#F7F8FA] animate-pulse rounded-xl border border-[#E5E7EB]"></div>;
 
   return (
     <GoogleMap
@@ -202,13 +190,11 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
       options={{
         disableDefaultUI: true,
         zoomControl: true,
-        mapTypeId: 'hybrid', // Satellite view with labels
-        backgroundColor: '#0B1120'
+        mapTypeId: 'terrain',
+        backgroundColor: '#F7F8FA'
       }}
     >
-      <div className="absolute inset-0 pointer-events-none bg-blue-900/10 mix-blend-overlay"></div>
-
-      {/* Render only visible markers based on staggered animation state */}
+      {/* Markers */}
       {allMarkers.slice(0, visibleCount).map(marker => (
         <CustomMarker 
           key={marker.key}
@@ -222,47 +208,47 @@ const TripMap = ({ trip, routeDetails, onPlaceClick }) => {
         />
       ))}
 
-      {/* Route Info Box at Midpoint */}
+      {/* Midpoint Info Box */}
       {decodedPath.length > 0 && routeDetails && (
         <OverlayView 
           position={decodedPath[Math.floor(decodedPath.length / 2)]} 
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
           getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -(height / 2) })}
         >
-          <div className="bg-[#1E293B]/90 backdrop-blur-md rounded-xl p-2 border border-gray-700/80 shadow-2xl flex flex-col items-center z-40 text-white min-w-[90px]">
-            <svg className="w-5 h-5 text-blue-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            <span className="font-bold text-xs">{Math.round(routeDetails.totalDuration / 60)}h {Math.round(routeDetails.totalDuration % 60)}m</span>
-            <span className="text-[10px] text-gray-400">{(routeDetails.totalDistance / 1000).toFixed(0)} km</span>
+          <div className="bg-white/95 backdrop-blur rounded-lg p-2 border border-[#E5E7EB] shadow-md flex flex-col items-center z-40 text-[#172033] min-w-[85px]">
+            <svg className="w-4 h-4 text-[#4A90E2] mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+            <span className="font-extrabold text-xs">{Math.round(routeDetails.totalDuration / 60)}h {Math.round(routeDetails.totalDuration % 60)}m</span>
+            <span className="text-[10px] text-[#697386] font-semibold">{(routeDetails.totalDistance / 1000).toFixed(0)} km</span>
           </div>
         </OverlayView>
       )}
 
-      {/* Polyline for route */}
+      {/* Polyline Route */}
       {decodedPath.length > 0 && (
         <Polyline
           path={decodedPath}
           options={{
-            strokeColor: '#38bdf8', // bright sky blue
-            strokeOpacity: 0.9,
-            strokeWeight: 6,
+            strokeColor: '#6D3DF5',
+            strokeOpacity: 0.85,
+            strokeWeight: 5,
             geodesic: true,
           }}
         />
       )}
       
-      {/* Legend overlay */}
-      <div className="absolute top-4 right-14 bg-[#1E293B]/90 backdrop-blur border border-gray-700 p-4 rounded-xl shadow-xl flex flex-col gap-3">
-         <div className="flex items-center gap-3">
-            <div className="w-6 h-1 bg-sky-400 rounded-full"></div>
-            <span className="text-white text-xs font-semibold">Travel Route</span>
+      {/* Map Legend */}
+      <div className="absolute top-3 right-12 bg-white/90 backdrop-blur border border-[#E5E7EB] p-3 rounded-lg shadow-sm flex flex-col gap-2">
+         <div className="flex items-center gap-2">
+            <div className="w-4 h-1 bg-[#6D3DF5] rounded-full"></div>
+            <span className="text-[#172033] text-[11px] font-bold">Route Path</span>
          </div>
-         <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-red-500 border border-white shrink-0"></div>
-            <span className="text-white text-xs font-semibold">Places to Visit</span>
+         <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#1FA774] border border-white"></div>
+            <span className="text-[#172033] text-[11px] font-bold">Origin</span>
          </div>
-         <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-indigo-500 border border-white shrink-0"></div>
-            <span className="text-white text-xs font-semibold">Stay Location</span>
+         <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#6D3DF5] border border-white"></div>
+            <span className="text-[#172033] text-[11px] font-bold">Destination</span>
          </div>
       </div>
     </GoogleMap>

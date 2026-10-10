@@ -23,9 +23,14 @@ class ErrorBoundary extends React.Component {
               ⚠️
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Something went wrong</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              The page encountered a temporary rendering issue. Click below to reload.
+            <p className="text-sm text-gray-400 mb-4">
+              The page encountered a temporary rendering issue.
             </p>
+            {this.state.error && (
+              <pre className="text-left text-xs bg-[#0B1120] text-red-400 p-3 rounded-xl border border-red-500/20 overflow-auto max-h-40 mb-6 font-mono">
+                {String(this.state.error?.stack || this.state.error?.message || this.state.error)}
+              </pre>
+            )}
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
